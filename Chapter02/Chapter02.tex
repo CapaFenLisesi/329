@@ -2636,10 +2636,10 @@ the two files which make up the program are as follows:
 
 #include <stdio.h>
 
-/* Prototype for fucntion factorial() */
+/* Prototype for function factorial() */
 void factorial();    
 
-/* Global variable declarations */
+/* Global variable definitions */
 int j;               
 double fact;
 
@@ -2665,7 +2665,7 @@ and
 #include <stdio.h>
 #include <stdlib.h>
 
-/* Global variable definitions */
+/* Global variable declarations */
 extern int j;               
 extern double fact;
 
@@ -2979,7 +2979,7 @@ This argument must, therefore, be passed as a pointer. Consequently, we must wri
 {\tt res}, when calling {\tt square()}, and we must refer to the argument as
 \verb}*y}, rather than {\tt y}, in the function itself. 
 After a while, all these ampersands and asterisks
-can become a little tedious! C++ introduces a new method of passing by reference which somewhat
+can become a little tedious! C++ introduces a new method of passing by reference which is somewhat
 less involved. This new method is illustrated in the following:
 {\small\begin{verbatim}
 . . .
