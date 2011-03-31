@@ -1,0 +1,3616 @@
+\chapter{Scientific Programming in C}
+
+\section{Introduction}
+As we have already mentioned, C is a  flexible, extremely powerful, high-level programming language which was
+initially designed for writing operating systems and  system applications. 
+In fact, all UNIX operating systems, as well
+as most UNIX applications ({\em e.g.}, text editors, window managers,
+{\em etc.}) are written in C. However, C is also
+an excellent vehicle for scientific programming, since, almost by definition,
+a good scientific programming language must be powerful, flexible, and high-level.
+Having said this, many of the features of C which send computer scientists into
+raptures are not particularly relevant to the needs of the scientific programmer. 
+Hence, in the following, we shall only describe  that subset of the C 
+language which is
+really necessary to write scientific programs. It may be objected that our cut-down version of C bears a suspicious resemblance
+to FORTRAN.   However, this resemblance is hardly surprising. After all, FORTRAN is a high-level programming
+language which was specifically designed with scientific computing in mind. 
+
+As discussed previously, C++  is an extension of the C language whose main aim
+is to facilitate object-orientated programming.
+The object-orientated features of C++ are superfluous to our
+needs in this course. However,  C++ incorporates some new, non-object-orientated features
+which are extremely useful to the scientific programmer. We shall briefly discuss
+these features towards the end of this section. Finally, we shall describe 
+ some prewritten C++ classes which allow us to incorporate complex arithmetic
+(which is not part of the C language), variable size arrays, and graphics into our programs.
+
+\section{Variables}
+Variable names in C can consist of letters and numbers in any order, except that
+the first character must be a letter. Names are {\em case sensitive}, so
+upper- and lower-case letters are not interchangeable. The underscore
+character (\verb{_{) can also be included in variable names, and is treated as a
+letter. There is no restriction on the length of  names in C. 
+Of course, variable names are not allowed to clash with keywords that play a
+special role in 
+the C language, such as {\tt int, double, if, return, void}, {\em etc}.
+The following are examples of valid variable names in C:
+{\small\begin{verbatim}
+x  c14  area  electron_mass  TEMPERATURE 
+\end{verbatim}}
+
+The C language supports a great variety of different data types. However,
+the two  data types which occur most often 
+in scientific programs are {\em integer},
+denoted {\tt int}, and {\em floating-point}, denoted {\tt double}. (Note that
+variables of the most basic floating-point data type {\tt float} are not generally stored to sufficient
+precision by the computer to be of much use in scientific programming.)
+The data type ({\tt int} or {\tt double}) of every variable in a C program
+must be declared {\em before}\/ that variable can appear in an executable statement.
+
+{\em Integer constants}\/ in C are denoted, in the regular fashion, by strings
+of arabic numbers: {\em e.g.},
+{\small\begin{verbatim}
+0  57  4567  128933
+\end{verbatim}}\noindent
+{\em Floating-point constants}\/ can be written in either regular or scientific
+notation: {\em e.g.},
+{\small\begin{verbatim}
+0.01  70.456  3e+5  .5067e-16
+\end{verbatim}}
+
+{\em Strings}\/ are mainly used in scientific programs for data input and output
+purposes.
+A string consists of any number of consecutive characters (including blanks)
+enclosed in double quotation marks: {\em e.g.},
+{\small\begin{verbatim}
+"red"  "Austin TX, 78723"  "512-926-1477"
+\end{verbatim}}\noindent
+Line-feeds can be incorporated into strings via the {\em escape sequence}\/
+{\verb{\n{: {\em e.g.},
+{\small\begin{verbatim}
+"Line 1\nLine 2\nLine 3"
+\end{verbatim}}\noindent
+The above string would be displayed on a computer terminal as{\small\begin{verbatim}
+Line 1
+Line 2
+Line 3
+\end{verbatim}}\noindent
+
+A {\em declaration}\/ associates a group of variables with a specific data
+type. As mentioned previously, all variables must be declared before they can appear in executable
+statements. A declaration consists of a data type followed by one or more
+variable names, ending in a semicolon. For instance,
+{\small\begin{verbatim}
+int    a, b, c;
+double    acc, epsilon, t;
+\end{verbatim}}\noindent
+In the above, {\tt a}, {\tt b}, and {\tt c} are declared to be integer
+variables, whereas {\tt acc}, {\tt epsilon}, and {\tt t} are declared to
+be floating-point variables. 
+
+A type declaration can also be used to
+assign initial values to variables.
+Some examples of how to do this are given below:
+{\small\begin{verbatim}
+int    a = 3, b = 5;
+double    factor = 1.2E-5;
+\end{verbatim}}\noindent
+Here, the integer variables {\tt a} and {\tt b} are assigned the initial
+values 3 and 5, respectively, whereas the floating-point variable
+{\tt factor} is assigned the initial value $1.2\times 10^{-5}$. 
+
+Note that there is no restriction on the length of a type declaration:
+such a  declaration can even be split over many lines,
+ so long as its end is signaled by a
+semicolon. However, all declaration statements in a program (or program segment) must
+occur {\em prior}\/ to the first executable statement.
+
+\section{Expressions and Statements}
+An {\em expression}\/ represents a single data item---usually  a number. The
+expression may consist of a single entity, such as a constant or variable, 
+or it may consist of some combination of such entities, interconnected by
+one or more 
+{\em operators}. Expressions can also represent logical
+conditions which are either true or false. However, in C, the conditions
+true and false are represented by the integer values {\tt 1} and {\tt 0},
+respectively. Several simple expressions are given below:
+{\small\begin{verbatim}
+a + b
+x = y
+t = u + v
+x <= y
+++j
+\end{verbatim}}\noindent
+The first expression, which employs the
+{\em addition operator}\/ (\verb{+{), represents the sum of the values assigned to
+variables {\tt a} and {\tt b}. The second expression involves the {\em assignment
+operator}\/ (\verb{={), and causes the value represented by {\tt y} to be
+assigned to {\tt x}. In the third expression, the value of the expression
+{\tt (u + v)} is assigned to {\tt t}. The fourth expression takes the value
+{\tt 1} (true) if the value of {\tt x} is less than or equal to the
+value of {\tt y}. Otherwise, the expression takes the value {\tt 0} (false).
+Here, \verb{<={ is a {\em relational operator}\/ that compares the values
+of {\tt x} and {\tt y}. The final example causes the value of {\tt j}
+to be increased by {\tt 1}. Thus, the expression is equivalent to
+{\small\begin{verbatim}
+j = j + 1
+\end{verbatim}}\noindent
+The {\em increment}\/ (by unity) operator \verb{++{ is called a {\em unary}\/ operator,
+because it only possesses one operand. 
+
+A {\em statement}\/ causes the computer to carry out some definite action. There
+are three different classes of statements in C: {\em expression statements},
+{\em compound statements}, and {\em control statements}. 
+
+An expression statement consists of an expression followed by a semicolon. The
+execution of such a  statement causes the associated expression to be evaluated. 
+For example:
+{\small\begin{verbatim}
+a = 6;
+c = a + b;
+++j;
+\end{verbatim}}\noindent
+The first two expression statements both cause the value of the expression
+on the right of the equal sign to be assigned to the variable on the left.
+The third expression statement causes the value of {\tt j} to be incremented
+by {\tt 1}.
+Again, there is no restriction on the length of an expression statement:
+such a statement can even be split over many lines,
+ so long as its end is signaled by a
+semicolon.
+
+A compound statement consists of several individual statements enclosed within
+a pair of braces \verb?{?~\verb{}{. The individual statements may themselves
+be expression statements, compound statements, or control statements. Unlike
+expression statements, compound statements do {\em not}\/ end with semicolons. 
+A typical compound statement is shown below:
+{\small\begin{verbatim}
+{
+  pi = 3.141593;
+  circumference = 2. * pi * radius;
+  area = pi * radius * radius;
+}
+\end{verbatim}}\noindent
+This particular compound statement  consists of three expression statements, but
+acts like a single entity in the program in which it appears. 
+ 
+A {\em symbolic constant}\/ is a name that substitutes for a sequence of
+characters. The characters may represent either a number or a string. 
+When a program is compiled, each occurrence of a symbolic constant is
+replaced by its corresponding character sequence. Symbolic constants are
+usually defined at the beginning of a program, by writing
+{\small\begin{verbatim}
+#define  NAME  text
+\end{verbatim}}\noindent
+where \verb{NAME{ represents a symbolic name, typically written in upper-case
+letters, and \verb{text{ represents the sequence of characters that is
+associated with that  name. Note that \verb{text{ does {\em not}\/
+end with a semicolon, since a symbolic constant definition is not a true
+C statement. In fact, during compilation,
+the resolution of symbolic names is performed
+(by the {\em C preprocessor}) before the start of true compilation. 
+For instance, suppose that a C program  contains the following  
+symbolic constant definition:
+{\small\begin{verbatim}
+#define  PI  3.141593
+\end{verbatim}}\noindent
+Suppose, further, that the program contains the statement
+{\small\begin{verbatim}
+area = PI * radius * radius;
+\end{verbatim}}\noindent
+During the compilation process, the preprocessor replaces each
+occurrence of the  symbolic constant {\tt PI}  by its corresponding text. Hence,
+the above statement becomes
+{\small\begin{verbatim}
+area = 3.141593 * radius * radius;
+\end{verbatim}}\noindent
+Symbolic constants are particularly useful in scientific programs for
+representing constants of nature, such as the mass of an electron, 
+the speed of light, {\em etc}. Since these quantities are fixed, there is
+little point in assigning  variables in which to store them.
+
+\section{Operators}
+As we have seen, general expressions are formed by joining together constants
+and variables via various operators. Operators in C fall into five main classes:
+{\em arithmetic operators}, {\em unary operators}, {\em relational and logical
+operators}, {\em assignment operators}, and the {\em conditional operator}. 
+Let us, now, examine each of these classes in detail. 
+
+There are {\em four}\/ main arithmetic operators in C. These are:
+{\small\begin{verbatim}
+addition          +
+subtraction       -
+multiplication    *
+division          /
+\end{verbatim}}\noindent
+Unbelievably, there is no built-in  exponentiation operator in C (C was written by
+computer scientists)! Instead, there is a {\em library function}\/ ({\tt pow})
+which carries out this operation (see later).
+
+It is poor programming practice to mix types in arithmetic expressions. In other
+words, the two operands operated on by the addition, subtraction, multiplication,
+or division operators should both be either  of type {\tt int} or type {\tt double}.
+The value of an expression can be converted to a different data type
+by prepending the name of the desired data type, enclosed in parenthesis. This
+type of construction is known as a {\em cast}. Thus, to convert an integer
+variable {\tt j} into a floating-point variable with the same value, we would
+write
+{\small\begin{verbatim}
+(double) j
+\end{verbatim}}\noindent
+Finally, to avoid mixing data types when dividing a floating-point variable
+{\tt x} by an integer variable {\tt i}, we would write
+{\small\begin{verbatim}
+x / (double) i
+\end{verbatim}}\noindent
+Of course, the result of this operation would be of type {\tt double}.
+
+The operators within C are grouped hierarchically according to their
+{\em precedence}\/  ({\em i.e.}, their order of evaluation).
+Amongst the arithmetic operators, \verb{*{ and \verb{/{ have
+precedence over \verb{+{ and \verb{-{. In other words, 
+when evaluating expressions, C performs multiplication and division 
+operations prior to addition and subtraction operations. Of course,
+the rules of precedence can always be bypassed by judicious use of parentheses. 
+Thus, the
+expression 
+{\small\begin{verbatim}
+a - b / c + d
+\end{verbatim}}\noindent
+is equivalent to the unambiguous expression 
+{\small\begin{verbatim}
+a - (b / c) + d
+\end{verbatim}}\noindent
+since division takes precedence over addition and subtraction.
+
+
+The distinguishing feature of unary operators is that 
+they only act on  single operands. The most common unary operator
+is the {\em unary minus}, which occurs
+when a numerical constant, variable, or expression
+is preceded by a minus sign. Note that the unary minus is distinctly different
+from the arithmetic operator (\verb{-{) which denotes subtraction, since the latter
+operator acts on two separate operands. The two other common unary
+operators are the {\em increment operator}, \verb{++{, and the
+{\em decrement operator}, \verb{--{. The increment operator causes its
+operand to be increased by {\tt 1}, whereas the decrement operator causes
+its operand to be decreased by {\tt 1}. For example,
+{\tt --i} is equivalent to {\tt i = i - 1}. A {\em cast}\/ is also considered to be
+a unary operator. Note that unary operators have precedence over arithmetic
+operators. Hence, \verb{- x + y{ is equivalent to the unambiguous expression
+\verb{(-x) + y{, since the unary minus operator has precedence over the 
+addition operator.
+
+Note that there is a subtle distinction between the expressions \verb{a++{ and \verb{++a{.
+In the former case, the value of the variable \verb{a{ is returned {\em before}\/
+it is incremented. In the latter case, the value of \verb{a{ is returned {\em after}\/
+ incrementation. Thus,
+{\small\begin{verbatim}
+b = a++;
+\end{verbatim}}\noindent
+is equivalent to
+{\small\begin{verbatim}
+b = a;
+a = a + 1;
+\end{verbatim}}\noindent
+whereas 
+{\small\begin{verbatim}
+b = ++a;
+\end{verbatim}}\noindent
+is equivalent to
+{\small\begin{verbatim}
+a = a + 1;
+b = a;
+\end{verbatim}}\noindent
+There is a similar distinction between the expressions \verb{a--{ and \verb{--a{.
+
+There are four relational operators in C. These are:
+{\small\begin{verbatim}
+less than                   <
+less than or equal to       <=
+greater than                >
+greater than or equal to    >=
+\end{verbatim}}\noindent
+The precedence of these operators is lower than that of arithmetic operators.
+
+Closely associated with the relational operators are the two {\em equality
+operators}:
+{\small\begin{verbatim}
+equal to        ==
+not equal to    !=
+\end{verbatim}}\noindent
+The precedence of the equality operators is below that of the relational
+operators. 
+
+The relational and equality operators are used to form logical expressions,
+which represent conditions that are either true or false. The resulting expressions
+are of type {\tt int}, since true is represented by the integer value {\tt 1}
+and false by the integer value {\tt 0}. For example, the
+expression {\tt i < j} is true (value {\tt 1}) if the value of {\tt i} 
+is less than the value of {\tt j}, and false (value {\tt 0}) otherwise. Likewise,
+the expression {\tt j == 3} is true  if the value of {\tt j}
+is equal to {\tt 3}, and false  otherwise. 
+
+C also possess two {\em logical operators}. These are:
+{\small\begin{verbatim}
+&&        and
+||        or
+\end{verbatim}}\noindent
+The logical operators act on operands which are themselves logical expressions.
+The net effect is to combine the individual logical expressions into more
+complex expressions that are either true or false. The result of
+a {\em logical and}\/ operation is only  true if both operands are true,
+whereas the result of a {\em logical or}\/ operation is only false
+if both operands are false. For instance, 
+the expression {\tt (i >= 5) \verb{&&{ (j == 3)} is true 
+if the value of {\tt i} is greater than or equal to {\tt 5} {\em and}\/ 
+the value of {\tt j} is equal to {\tt 3}, otherwise it
+is false. The precedence of the {\em logical
+and}\/ operator is higher than that of the {\em logical or}\/ operator, but lower 
+than that of the equality operators. 
+
+C also includes the unary operator \verb{!{ that negates the value of a logical
+expression: {\em i.e.}, it causes an expression that is originally true to become
+false, and {\em vice versa}. This operator is referred to as the
+{\em logical negation} or {\em logical not}\/ operator. For instance,
+the expression \verb{!(k == 4){ is true if the value of {\tt k} is not
+equal to {\tt 4}, and false otherwise.
+
+Note that it is poor programming practice to rely too heavily on operator 
+precedence,
+since such reliance tends to  makes  C programs very hard for other people
+to follow. For instance, instead of writing
+{\small\begin{verbatim}
+i + j == 3 && i * l >= 5
+\end{verbatim}}\noindent
+and relying on the fact that arithmetic operators have precedence over
+relational and equality operators, which, in turn, have precedence over
+logical operators, it is better to write
+{\small\begin{verbatim}
+((i + j) == 3) && (i * l >= 5)
+\end{verbatim}}\noindent
+whose meaning is fairly unambiguous, even to people who cannot remember the
+order of precedence of the various operators in C. 
+
+The most common assignment operator in C is \verb{={. For instance, the
+expression
+{\small\begin{verbatim}
+f = 3.4
+\end{verbatim}}\noindent
+causes the floating-point value {\tt 3.4} to be assigned to the
+variable {\tt f}. Note that the assignment operator \verb{={ and the
+equality operator \verb{=={ perform completely different functions
+in C, and should not be confused. Multiple assignments are permissible
+in C. For example,
+{\small\begin{verbatim}
+i = j = k = 4
+\end{verbatim}}\noindent
+causes the integer value {\tt 4} to be assigned to {\tt i}, {\tt j}, and
+{\tt k}, simultaneously. Note, again, that it is poor programming
+practice to mix data types in assignment expressions. Thus, the data types
+of the constants or variables on either side of the \verb{={ sign
+should always match. 
+
+C contains four additional assignment operators: \verb{+={, \verb{-={,
+\verb{*={, and \verb{/={. The expression
+{\small\begin{verbatim}
+i += 6
+\end{verbatim}}\noindent
+is equivalent to \verb{i = i + 6{. Likewise, the expression
+{\small\begin{verbatim}
+i -= 6
+\end{verbatim}}\noindent
+is equivalent to \verb{i = i - 6{. The expression 
+{\small\begin{verbatim}
+i *= 6
+\end{verbatim}}\noindent
+is equivalent to  \verb{i = i * 6{. Finally, the expression 
+{\small\begin{verbatim}
+i /= 6
+\end{verbatim}}\noindent
+is equivalent to  \verb{i = i / 6{.
+Note that the precedence of assignment operators is below that of 
+all the operators discussed previously. 
+
+Simple conditional operations can be carried out with the {\em conditional
+operator}\/ \verb{(? :){. An expression that makes use
+of the conditional operator is called a {\em conditional expression}. 
+Such an expression takes the general form
+{\small\begin{verbatim}
+expression 1  ?  expression 2  :  expression 3
+\end{verbatim}}\noindent
+If \verb{expression 1{ is true ({\em i.e.}, if its value is nonzero)
+then \verb{expression 2{ is evaluated and becomes the value of the conditional
+expression. On the other hand, if 
+ \verb{expression 1{ is false ({\em i.e.}, if its value is zero)
+then \verb{expression 3{ is evaluated and becomes the value of the conditional
+expression. For instance, the expression 
+{\small\begin{verbatim}
+(j < 5) ? 12 : -6
+\end{verbatim}}\noindent
+takes the value {\tt 12} if the value of {\tt j} is less than {\tt 5}, and
+the value {\tt -6} otherwise. The assignment statement
+{\small\begin{verbatim}
+k = (i < 0) ? n : m
+\end{verbatim}}\noindent
+causes the value of {\tt n} to be assigned to the variable {\tt k}
+if the value of {\tt i} is less than zero, and the value of
+{\tt m} to be assigned to {\tt k} otherwise. The precedence of
+the conditional operator is just above that of the assignment operators. 
+
+As we have already mentioned, scientific programs tend to be extremely resource intensive.
+Scientific programmers should, therefore, always be on the lookout for methods
+of speeding up the execution of their codes. It is important to realize that
+multiplication (\verb{*{) and division (\verb{/{) operations consume {\em considerably
+more}\/ CPU time that addition (\verb{+{), subtraction (\verb{-{), comparison, or assignment
+operations. Thus, a simple rule of thumb for writing efficient code is to try to
+avoid redundant multiplication and division operations. This is particularly important
+for sections of code which are executed repeatedly: {\em e.g.}, code which lies within
+control loops. The classic illustration of this point is the evaluation of a
+polynomial. The most straightforward method of evaluating  (say) a fourth-order polynomial
+would be to write something like:
+{\small\begin{verbatim}
+p = c_0 + c_1 * x + c_2 * x * x + c_3 * x * x * x + c_4 * x * x * x * x
+\end{verbatim}}\noindent 
+Note that the above expression employs {\em ten}\/ expensive multiplication operations. 
+However, this number can be reduced to {\em four}\/ via a simple algebraic rearrangement:
+{\small\begin{verbatim}
+p = c_0 + x * (c_1 + x * (c_2 + x * (c_3 + x * c_4)))
+\end{verbatim}}\noindent 
+Clearly, the latter expression is far more computationally efficient than the former.
+
+\section{Library Functions}
+The C language is accompanied by a number of standard {\em library functions}\/ which
+carry out various useful tasks. In particular, all input and output operations
+({\em e.g.}, writing to the terminal) and all math operations ({\em e.g.}, 
+evaluation of sines and cosines) are implemented by library functions. 
+
+In order to use a library function, it is necessary to call the appropriate
+{\em header file}\/ at the beginning of the program. The header file
+informs the program of the name, type, and number and type of arguments,
+of all of  the functions contained in the library in question. 
+A header file is called via the preprocessor statement
+{\small\begin{verbatim}
+#include   <filename>
+\end{verbatim}}\noindent
+where \verb{filename{ represents the name of the header file. 
+
+A library function is accessed  by simply writing the function  name, followed
+by a list of {\em arguments}, which represent the information being passed to
+the function. The arguments must be enclosed in parentheses, and separated by commas:
+they  can be constants, variables, or more complex expressions. Note
+that the parentheses must be present even when there are no arguments.
+
+The C {\em math library}\/ has the header file {\tt math.h}, and contains the
+following useful functions:
+{\small\begin{verbatim}
+Function        Type        Purpose
+--------        ----        -------
+
+acos(d)         double      Return arc cosine of d (in range 0 to pi)
+asin(d)         double      Return arc sine of d (in range -pi/2 to pi/2)
+atan(d)         double      Return arc tangent of d (in range -pi/2 to pi/2)
+atan2(d1, d2)   double      Return arc tangent of d1/d2 (in range -pi to pi)
+cbrt(d)         double      Return cube root of d
+cos(d)          double      Return cosine of d
+cosh(d)         double      Return hyperbolic cosine of d
+exp(d)          double      Return exponential of d
+fabs(d)         double      Return absolute value of d
+hypot(d1, d2)   double      Return sqrt(d1 * d1 + d2 * d2)
+log(d)          double      Return natural logarithm of d
+log10(d)        double      Return logarithm (base 10) of d
+pow(d1, d2)     double      Return d1 raised to the power d2
+sin(d)          double      Return sine of d
+sinh(d)         double      Return hyperbolic sine of d
+sqrt(d)         double      Return square root of d
+tan(d)          double      Return tangent of d
+tanh(d)         double      Return hyperbolic tangent of d
+\end{verbatim}}\noindent
+Here, {\tt Type} refers to the data type of the quantity that is returned by
+the function. Moreover, {\tt d}, {\tt d1}, {\em etc.} indicate arguments of
+type {\tt double}. 
+
+A program that makes use of the C math library would contain the statement
+{\small\begin{verbatim}
+#include   <math.h>
+\end{verbatim}}\noindent
+close to its start. In the body of the program,
+a statement like
+{\small\begin{verbatim}
+x = cos(y);
+\end{verbatim}}\noindent
+would cause the variable {\tt x} to be assigned a value which is the cosine of
+the value of the variable {\tt y} (both {\tt x} and {\tt y} should be of
+type {\tt double}).
+
+Note that math library functions tend to be {\em extremely expensive}\/ in terms of CPU time, and
+should, therefore, only be employed when absolutely necessary. The classic illustration
+of this point is the use of the {\tt pow()} function. This function assumes that, in general,
+it will be called with a {\em fractional}\/ power, and, therefore, implements a full-blown (and
+very expensive) 
+series expansion. Clearly, it is not computationally efficient to use this function to
+square or cube a quantity. In other words, if a quantity needs to be raised to a small,
+positive integer power then this should be implemented {\em directly}, instead of
+using the {\tt pow()} function: {\em i.e.}, we should write \verb{x * x{ rather than
+{\tt pow(x, 2)}, and \verb{x * x * x{ rather than {\tt pow(x, 3)}, {\em etc.}
+(Of course, a properly designed exponentiation function would realize that it is more
+efficient to evaluate small positive integer powers by the direct method. Unfortunately,
+the {\tt pow()} function was written by computer scientists!)
+
+The C math library comes with a useful set of predefined mathematical constants:{\small\begin{verbatim}
+Name        Description    
+----        -----------    
+
+M_PI        Pi, the ratio of a circle's circumference to its diameter. 
+M_PI_2      Pi divided by two.
+M_PI_4      Pi divided by four.    
+M_1_PI      The reciprocal of pi (1/pi).
+M_SQRT2     The square root of two.
+M_SQRT1_2   The reciprocal of the square root of two 
+             (also the square root of 1/2). 
+M_E         The base of natural logarithms.
+\end{verbatim}}\noindent
+
+The other library functions commonly used in C programs will be introduced,
+as appropriate, during the remainder of this discussion. 
+ 
+
+\section{Data Input and Output}\label{sio}
+Data input and output operations in C are carried out by the standard input/output
+library (header file: {\tt stdio.h}) via the functions {\tt scanf}, {\tt printf},
+{\tt fscanf}, and {\tt fprintf}, which read and write data from/to the terminal,
+and  from/to a data file, respectively. The additional functions
+{\tt fopen} and {\tt fclose} open and close, respectively, connections between
+a C program and a data file.
+In the following, these
+functions are described in detail.
+
+The {\tt scanf} function reads data from standard input (usually, the terminal).
+A call to this function takes the general form
+{\small\begin{verbatim}
+scanf(control_string,  arg1,  arg2,  arg3,  ...)
+\end{verbatim}}\noindent
+where {\tt control\verb{_{string} refers to a character string containing certain required
+formatting information, and {\tt arg1}, {\tt arg2}, {\em etc.}, are arguments
+that represent the individual input data items. 
+
+The control string consists of individual groups of characters, with one character
+group for each data input item. In its simplest form, each character group
+ consists of a
+percent sign (\verb{%{), followed by  a set of {\em conversion characters}\/ which
+indicate the type of the corresponding data item. The two most
+useful sets of conversion characters are as follows:
+{\small\begin{verbatim}
+Character      Type
+---------      ----
+
+d              int
+lf             double
+\end{verbatim}}\noindent
+The arguments are a set of variables whose types match the corresponding
+character groups in the control string. For reasons which will become apparent
+later on, {\em each variable name must be preceded by an ampersand}\/ (\verb{&{). 
+Below is a typical application of the {\tt scanf} function:
+{\small\begin{verbatim}
+#include  <stdio.h>
+. . . 
+int  k;
+double  x, y;
+. . .
+scanf("%d %lf %lf", &k, &x, &y);
+. . .
+\end{verbatim}}\noindent
+In this example, the {\tt scanf} function reads an integer value and
+two floating-point values, from standard input,
+ into the integer variable {\tt k} and the
+two floating-point variables {\tt x} and {\tt y}, respectively. 
+
+The {\tt scanf} function returns an integer equal to the number of
+data values successfully read from standard input, which can be fewer
+than expected, or even zero, in the event of a matching failure. The
+special value {\tt EOF} (which on most systems corresponds to $-1$)
+is returned if an end-of-file is reached before any attempted conversion occurs.
+The following code snippet gives an example of how the {\tt scanf} function can
+be checked for error-free input:
+{\small\begin{verbatim}
+#include  <stdio.h>
+. . . 
+int  check_input;
+double  x, y, z;
+. . .
+check_input = scanf("%lf %lf %lf", &x, &y, &z);
+if (check_input < 3)
+ {
+  printf("Error during data input\n");
+  . . .
+ }
+. . .
+\end{verbatim}}\noindent
+See later for an explanation of the {\tt if()} construct.
+
+The {\tt printf} function writes data to standard output (usually, the terminal).
+A call to this function takes the general form
+{\small\begin{verbatim}
+printf(control_string,  arg1,  arg2,  arg3,  ...)
+\end{verbatim}}\noindent
+where {\tt control\verb{_{string} refers to a character string containing 
+formatting information, and {\tt arg1}, {\tt arg2}, {\em etc.}, are arguments
+that represent the individual output data items. 
+
+The control string consists of individual groups of characters, with
+one character group for each output data item. 
+In
+its simplest form, each character group
+ consists of a
+percent sign (\verb{%{), followed by a {\em conversion character}\/ which
+controls the format of the corresponding data item. The most
+useful conversion characters are as follows:
+{\small\begin{verbatim}
+Character      Meaning
+---------      -------
+
+d              Display data item as signed decimal integer
+f              Display data item as floating-point number without exponent
+e              Display data item as floating-point number with exponent    
+\end{verbatim}}\noindent
+The arguments are a set of variables whose types match the corresponding
+character groups in the control string
+({\em i.e.}, type {\tt int} for {\tt d} format, and
+type {\tt double} for {\tt f} or {\tt e} format). In contrast to the {\tt scanf} function,
+the arguments are {\em not}\/ preceded by ampersands. 
+Below is a typical application of the {\tt scanf} function:
+{\small\begin{verbatim}
+#include  <stdio.h>
+. . . 
+int  k = 3;
+double  x = 5.4, y = -9.81;
+. . .
+printf("%d %f %f\n", k, x, y);
+. . .
+\end{verbatim}}\noindent
+In this example, the program outputs the values of the integer variable
+{\tt k} and the floating-point variables {\tt x} and {\tt y} to
+the terminal. Executing the program produces the following output:
+{\small\begin{verbatim}
+3 5.400000 -9.810000   
+%
+\end{verbatim}}\noindent
+Note that the 	purpose of the escape sequence \verb{\n{ in the control string is
+to generate a line-feed after the three data items have been written to the
+terminal. 
+
+Of course, the {\tt printf} function can also be used to write a simple text string
+to the terminal: {\em e.g.}, 
+{\small\begin{verbatim}
+printf(text_string)
+\end{verbatim}}\noindent
+Ordinary text  can also be incorporated into the control string described
+above. 
+
+
+An example illustrating somewhat more advanced use of the
+{\tt printf} function is given below:
+{\small\begin{verbatim}
+#include  <stdio.h>
+. . . 
+int  k = 3;
+double  x = 5.4, y = -9.81;
+. . .
+printf("k = %3d  x + y = %9.4f  x*y = %11.3e\n", k, x + y, x*y);
+. . .
+\end{verbatim}}\noindent
+Executing the program produces the following output:
+{\small\begin{verbatim}
+k =   3  x + y =   -4.4100  x*y =  -5.297e+01        
+%
+\end{verbatim}}\noindent
+Note that the final two arguments of the {\tt printf} function are
+arithmetic expressions. Note, also, the incorporation of explanatory text
+into the control string. 
+
+The character sequence \verb{%3d{ in the control
+string indicates that the associated data item should be output as
+a signed decimal integer occupying a field whose width is {\em at least}\/
+3 characters. More generally, the character sequence \verb{%nd{
+indicates that the associated data item should be output as
+a signed decimal integer occupying a field whose width is {\em at least}\/
+{\tt n}  characters.
+If the number of characters in the data item is less than
+{\tt n} characters, then the data item
+is preceded by enough leading blanks to fill the specified field. On the
+other hand, if the data item exceeds the specified field width then additional
+space is allocated to the data item, such that the entire data item is displayed. 
+
+The character sequence \verb{%9.4f{ in the control string indicates that
+the associated data item should be output as a floating-point number, in
+non-scientific format, which occupies a field of at least 9 characters, and
+has 4 figures after the decimal point.  More generally, the character
+sequence \verb{%n.mf{ indicates that the associated data item should be
+output as a floating-point number, in non-scientific format, which occupies a field 
+of at least {\tt n} characters, and
+has {\tt m} figures after the decimal point.
+
+Finally, the character sequence \verb{%11.3e{ in the control string indicates that
+the associated data item should be output as a floating-point number, in
+scientific format, which occupies a field of at least 11 characters, and
+has 3 figures after the decimal point.  More generally, the character
+sequence \verb{%n.me{ indicates that the associated data item should be
+output as a floating-point number, in scientific format, which occupies a field 
+of at least {\tt n} characters, and
+has {\tt m} figures after the decimal point.
+
+The {\tt printf} function returns an integer equal to the number of
+printed characters, or a negative value if there was an output error.
+
+When working with a {\em data file}, the first step is to establish a
+{\em buffer area}, where information is temporarily stored whilst
+being transferred between the program and the  file. This buffer
+area allows information to be read or written to the data file in question more
+rapidly than would otherwise be possible. A buffer area is established
+by writing
+{\small\begin{verbatim}
+FILE *stream;
+\end{verbatim}}\noindent
+where {\tt FILE} (upper-case letters required) is a special structure type
+that establishes a buffer area, and {\tt stream} is the identifier of the 
+created buffer
+area.  Note that a buffer area 
+is often referred to as an input/output {\em stream}. The
+meaning of the asterisk (\verb{*{) that precedes the identifier of the stream,
+in the above statement,
+will become clear later on. It is, of course, possible to establish
+multiple input/output streams (provided that  their identifiers are
+distinct).
+
+A data file must be opened and attached to a specific input/output stream before
+it can be created or processed. This operation is performed by the
+function {\tt fopen}. A typical call to {\tt fopen} takes the
+form
+{\small\begin{verbatim}
+stream = fopen(file_name, file_type);
+\end{verbatim}}\noindent
+where {\tt stream} is the identifier of
+the input/output stream to which the file is to be attached, and 
+\verb{file_name{ and \verb{file_type{ are character strings that represent
+the name of the data file and the manner in which the data file will be
+utilized, respectively. The \verb{file_type{ string must be one of the strings
+listed below:
+{\small\begin{verbatim}
+file_type         Meaning
+---------         -------
+
+"r"        Open existing file for reading only
+"w"        Open new file for writing only (Any existing file 
+            will be overwritten)
+"a"        Open existing file in append mode. (Output will be
+            appended to the file)
+\end{verbatim}}\noindent
+The {\tt fopen} function returns the integer value {\tt NULL} (which on most systems
+corresponds to zero) in the event
+of an error.
+
+A data file must also be closed at the end of the program. This operation
+is performed by the function {\tt fclose}. The syntax for a call to
+{\tt fclose} is simply
+{\small\begin{verbatim}
+fclose(stream);
+\end{verbatim}}\noindent
+where {\tt stream} is the name of the input/output stream which is to
+be deattached from a data file. The {\tt fclose} function
+returns the integer value {\tt 0} upon successful completion, otherwise it
+returns the special value {\tt EOF}.
+
+
+
+Data can be read from an open data file using the {\tt fscanf} function, whose
+syntax is
+{\small\begin{verbatim}
+fscanf(stream, control_string,  arg1,  arg2,  arg3,  ...)
+\end{verbatim}}\noindent
+Here, {\tt stream} is the identifier of the input/output stream to which the
+file is attached, and the remaining arguments have exactly the same format
+and meaning as the corresponding arguments for the {\tt scanf} function. 
+The return values of {\tt fscanf} are similar to those of the {\tt scanf} function.
+
+Likewise, data can be written to  an open data file using the {\tt fprintf} 
+function, whose
+syntax is
+{\small\begin{verbatim}
+fprintf(stream, control_string,  arg1,  arg2,  arg3,  ...)
+\end{verbatim}}\noindent
+Here, {\tt stream} is the identifier of the input/output stream to which the
+file is attached, and the remaining arguments have exactly the same format
+and meaning as the corresponding arguments for the {\tt printf} function.
+The return values of {\tt fprintf} are similar to those of the {\tt printf} function.
+
+An example of a C program which outputs data to the file ``data.out'' is given
+below:
+{\small\begin{verbatim}
+#include  <stdio.h>
+. . .
+int  k = 3;
+double  x = 5.4, y = -9.81;
+FILE *output;
+. . .
+output = fopen("data.out", "w");
+if (output == NULL)
+ {
+  printf("Error opening file data.out\n");
+  . . .
+ }
+. . .
+fprintf(output, "k = %3d  x + y = %9.4f  x*y = %11.3e\n", k, x + y, x*y);
+. . .
+fclose(output);
+. . .
+\end{verbatim}}\noindent 
+On execution, the above program will write the line
+{\small\begin{verbatim}
+k =   3  x + y =   -4.4100  x*y =  -5.297e+01        
+\end{verbatim}}\noindent
+to the data file ``data.out''.
+
+
+\section{Structure of a C Program}
+The syntax of a complete C program is given below:
+{\small\begin{verbatim}
+. . .
+int main() 
+{
+ . . .
+ return 0;
+}
+. . .
+\end{verbatim}}\noindent
+The meaning of the statements {\tt int main()} and {\tt return} will
+become clear later on.  Preprocessor statements ({\em e.g.}, 
+\verb{#define{ and \verb{#include{ statements) are conventionally placed {\em before}\/ the
+{\tt int main()} statement. All executable statements must be placed
+{\em between}\/ the {\tt int main()} and {\tt return} statements. Function
+definitions (see later) are conventionally placed {\em after}\/ the
+{\tt return} statement.
+
+A simple C program ({\tt quadratic.c}) that calculates the real roots of a quadratic
+equation using the well-known quadratic formula is listed below.
+{\small\begin{verbatim}
+/* quadratic.c */
+/*
+  Program to evaluate real roots of quadratic equation
+
+     2
+  a x  + b x + c = 0
+
+  using quadratic formula
+
+                     2  
+  x = ( -b +/- sqrt(b - 4 a c) ) / (2 a)
+*/
+
+#include <stdio.h>
+#include <math.h>
+
+int main() 
+{
+  double a, b, c, d, x1, x2;
+
+  /* Read input data */
+  printf("\na = ");
+  scanf("%lf", &a);
+  printf("b = ");
+  scanf("%lf", &b);
+  printf("c = ");
+  scanf("%lf", &c);
+
+  /* Perform calculation */
+  d = sqrt(b * b - 4. * a * c);
+  x1 = (-b + d) / (2. * a);
+  x2 = (-b - d) / (2. * a);
+
+  /* Display output */
+  printf("\nx1 = %12.3e   x2 = %12.3e\n", x1, x2);
+
+  return 0;
+}
+\end{verbatim}}\noindent
+Note the use of {\em comments}\/ (which are placed between the
+delimiters \verb{/*{ and \verb{*/{) to first explain the function of the program
+and  then identify the program's major sections. Note, also, the use
+of {\em indentation}\/ to highlight the executable statements. When 
+executed, the
+above program produces the following output:
+{\small\begin{verbatim}
+a = 2
+b = 4
+c = 1
+
+x1 =   -2.929e-01   x2 =   -1.707e+00
+%
+\end{verbatim}}\noindent 
+Of course, the {\tt 2}, {\tt 4}, and {\tt 1} were entered by the user in response
+to the programs's prompts. 
+
+It is important to realize that there is more to writing a complete
+computer program than simply arranging the individual declarations and statements
+in the right order. Attention should also be given to making the program
+and its output as {\em readable}\/ as possible, so that the program's function
+ is
+{\em immediately obvious}\/ to other people. This can be achieved by judicious use
+of indentation and whitespace, as well as the inclusion of comments, and
+the generation of clearly labeled output.  It is hoped that this
+approach will be exemplified by the example programs used in this course. 
+
+\section{Control Statements}
+The C language includes a wide variety of powerful and flexible control
+statements. The most useful of these are described in the following. 
+
+The {\tt if-else} statement is used to carry out a logical test and
+then take one of two possible actions, depending on whether the outcome
+of the test is true or false. The {\tt else} portion of the statement
+is optional. Thus, the simplest possible {\tt if-else} statement takes the form:
+{\small\begin{verbatim}
+if (expression) statement
+\end{verbatim}}\noindent
+The expression must be placed in parenthesis, as shown. In this form,
+the  statement will only be executed if the  expression has a nonzero
+value ({\em i.e.}, if {\tt expression} if true). If the  expression
+has a value of zero ({\em i.e.}, if {\tt expression} is false) then
+the  statement will be ignored. The statement can be either
+simple or compound. 
+
+The program {\tt quadratic.c}, listed previously, is incapable of
+dealing correctly with cases where the roots are complex ({\em i.e.}, $b^2<4\,a\,c$),
+or cases where $a=0$. It is good programming practice to test for situations
+which fall outside the domain of validity of a program, and 
+produce some sort of error message when these occur. An amended version of 
+{\tt quadratic.c} which uses {\tt if-else} statements to
+reject invalid input data is listed below.
+{\small\begin{verbatim}
+/* quadratic1.c */
+/*
+  Program to evaluate real roots of quadratic equation
+
+     2
+  a x  + b x + c = 0
+
+  using quadratic formula
+
+                     2  
+  x = ( -b +/- sqrt(b - 4 a c) ) / (2 a)
+
+  Program rejects cases where roots are complex
+  or where a = 0.
+*/
+
+#include <stdio.h>
+#include <math.h>
+#include <stdlib.h>
+
+int main() 
+{
+  double a, b, c, d, e, x1, x2;
+
+  /* Read input data */
+  printf("\na = ");
+  scanf("%lf", &a);
+  printf("b = ");
+  scanf("%lf", &b);
+  printf("c = ");
+  scanf("%lf", &c);
+ 
+  /* Test for complex roots */
+  e = b * b - 4. * a * c;
+
+  if (e < 0.) 
+   {
+    printf("\nError: roots are complex\n");
+    exit(1);
+   }
+
+  /* Test for a = 0. */
+  if (a == 0.) 
+   {
+    printf("\nError: a = 0.\n");
+    exit(1);
+   }
+
+  /* Perform calculation */
+  d = sqrt(e);
+  x1 = (-b + d) / (2. * a);
+  x2 = (-b - d) / (2. * a);
+
+  /* Display output */
+  printf("\nx1 = %12.3e   x2 = %12.3e\n", x1, x2);
+
+  return 0;
+}
+\end{verbatim}}\noindent
+Note the use of indentation to highlight statements which are conditionally
+executed ({\em i.e.}, statements within an {\tt if-else} statement). 
+The standard library function call {\tt exit(1)} (header file: {\tt stdlib.h}) causes the program
+to abort with an error status. Execution of the above program for the
+case of complex roots yields the following output:
+{\small\begin{verbatim}
+a = 4
+b = 2
+c = 6
+
+Error: roots are complex
+%
+\end{verbatim}}\noindent
+
+The general form of an {\tt if-else} statement, which includes the
+{\tt else} clause, is
+{\small\begin{verbatim}
+if (expression)  statement 1  else  statement 2
+\end{verbatim}}\noindent
+If the expression has a non-zero value ({\em i.e.}, if {\tt expression}
+is true) then {\tt statement\,1} is executed. Otherwise, {\tt statement\,2}
+is executed. The program listed below is an extended version of the
+previous program {\tt quadratic.c} which is capable of dealing
+with complex roots. 
+{\small\begin{verbatim}
+/* quadratic2.c */
+/*
+  Program to evaluate all roots of quadratic equation
+
+     2
+  a x  + b x + c = 0
+
+  using quadratic formula
+
+                     2  
+  x = ( -b +/- sqrt(b - 4 a c) ) / (2 a)
+
+  Program rejects cases where a = 0.
+*/
+
+#include <stdio.h>
+#include <math.h>
+#include <stdlib.h>
+
+int main() 
+{
+  double a, b, c, d, e, x1, x2;
+
+  /* Read input data */
+  printf("\na = ");
+  scanf("%lf", &a);
+  printf("b = ");
+  scanf("%lf", &b);
+  printf("c = ");
+  scanf("%lf", &c);
+ 
+  /* Test for a = 0. */
+  if (a == 0.) 
+   {
+    printf("\nError: a = 0.\n");
+    exit(1);
+   }
+
+  /* Perform calculation */
+  e = b * b - 4. * a * c;
+
+  if (e > 0.) // Test for real roots
+   {  
+    /* Case of real roots */
+    d = sqrt(e);
+    x1 = (-b + d) / (2. * a);
+    x2 = (-b - d) / (2. * a);
+    printf("\nx1 = %12.3e   x2 = %12.3e\n", x1, x2);
+   } 
+  else 
+   {
+    /* Case of complex roots */
+    d = sqrt(-e);
+    x1 = -b / (2. * a);
+    x2 = d / (2. * a);
+    printf("\nx1 = (%12.3e, %12.3e)   x2 = (%12.3e, %12.3e)\n", 
+           x1, x2, x1, -x2);
+   }
+  return 0;
+}
+\end{verbatim}}\noindent
+Note the use of an {\tt if-else} statement to deal with the two alternative cases 
+of real and complex roots. Note also that the C compiler ignores
+all characters on a line which occur after the {\tt //}  construct.\footnote{
+Strictly speaking, this is a C++ extension to the C language. However, most
+modern C compilers now accept this comment style.} Hence, this
+construct can be used to comment individual lines in a program. The output
+from the above program for the case of complex roots looks like:
+{\small\begin{verbatim}
+a = 9
+b = 2
+c = 2
+
+x1 = (  -1.111e-01,    4.581e-01)   x2 = (  -1.111e-01,   -4.581e-01)
+%
+\end{verbatim}}
+
+The {\tt while} statement is used to carry out looping operations,
+in which a group of statements is executed repeatedly until some
+condition is satisfied. The general form of a {\tt while} statement is
+{\small\begin{verbatim}
+while  (expression)  statement
+\end{verbatim}}\noindent
+The statement is executed repeatedly, as long as the expression
+is nonzero ({\em i.e.}, as long as {\tt expression} is true). The
+statement can be either simple or compound. Of course, the statement
+ must include some
+feature that eventually alters the value of the expression, thus
+providing an escape mechanism from the loop. 
+
+The program listed below  ({\tt iteration.c}) uses a {\tt while} statement to solve
+an algebraic equation via iteration, as explained in the initial comments.
+{\small\begin{verbatim}
+/* iteration.c */
+/* 
+   Program to solve algebraic equation
+
+    5      2 
+   x  + a x  - b = 0
+
+   by iteration. Easily shown that equation must have at least
+   one real root. Coefficients a and b are supplied by user.
+
+   Iteration scheme is as follows:
+
+                    2  0.2
+   x    =  ( b - a x  )
+    n+1             n
+
+   where x_n is nth iteration. User must supply initial guess for x.
+   Iteration continues until relative change in x per iteration is 
+   less than eps (user supplied) or until number of iterations exceeds 
+   NITER. Program aborts if (b - a x*x) becomes negative. 
+*/
+
+#include <stdio.h>
+#include <math.h>
+#include <stdlib.h>
+
+/* Set max. allowable no. of iterations */
+#define NITER 30   
+
+int main() 
+{
+  double a, b, eps, x, x0, dx = 1., d;
+  int count = 0;
+
+  /* Read input data */
+  printf("\na = ");
+  scanf("%lf", &a);
+  printf("b = ");
+  scanf("%lf", &b);
+  printf("eps = ");
+  scanf("%lf", &eps);
+
+  /* Read initial guess for x */
+  printf("\nInitial guess for x = ");  
+  scanf("%lf", &x);
+  x0 = x;
+
+  while (dx > eps)  // Start iteration loop: test for convergence
+   {
+    /* Check for too many iterations */
+    ++count;
+    if (count > NITER) 
+     {
+      printf("\nError: no convergence\n");
+      exit(1);
+     }
+
+    /* Reject complex roots */
+    d = b - a * x * x;
+    if (d < 0.)    
+     {
+      printf("Error: complex roots - try another initial guess\n");
+      exit(1);
+     }
+
+    /* Perform iteration */
+    x = pow(d, 0.2);
+    dx = fabs( (x - x0) / x );
+    x0 = x;
+
+    /* Output data on iteration */
+    printf("Iter = %3d   x = %8.4f   dx = %12.3e\n", count, x, dx);
+   }
+  return 0;
+}
+\end{verbatim}}\noindent
+The typical output from the above program looks like:
+{\small\begin{verbatim}
+a = 3
+b = 10
+eps = 1.e-6
+
+Initial guess for x = 1
+Iter =   1   x =   1.4758   dx =    3.224e-01
+Iter =   2   x =   1.2823   dx =    1.509e-01
+Iter =   3   x =   1.3834   dx =    7.314e-02
+Iter =   4   x =   1.3361   dx =    3.541e-02
+Iter =   5   x =   1.3595   dx =    1.720e-02
+Iter =   6   x =   1.3483   dx =    8.350e-03
+Iter =   7   x =   1.3537   dx =    4.056e-03
+Iter =   8   x =   1.3511   dx =    1.969e-03
+Iter =   9   x =   1.3524   dx =    9.564e-04
+Iter =  10   x =   1.3518   dx =    4.644e-04
+Iter =  11   x =   1.3521   dx =    2.255e-04
+Iter =  12   x =   1.3519   dx =    1.095e-04
+Iter =  13   x =   1.3520   dx =    5.318e-05
+Iter =  14   x =   1.3519   dx =    2.583e-05
+Iter =  15   x =   1.3520   dx =    1.254e-05
+Iter =  16   x =   1.3520   dx =    6.091e-06
+Iter =  17   x =   1.3520   dx =    2.958e-06
+Iter =  18   x =   1.3520   dx =    1.436e-06
+Iter =  19   x =   1.3520   dx =    6.975e-07      
+%    
+\end{verbatim}}
+
+When a loop is constructed using a {\tt while} statement, the test for
+the continuation of the loop is carried out at the {\em beginning}\/ 
+of each pass. Sometimes, however, it is desirable to have a loop where the
+test for continuation takes place at the {\em end}\/ of each pass. This
+can be accomplished by means of a {\tt do-while} statement. The
+general form of a {\tt do-while} statement is
+{\small\begin{verbatim}
+do  statement  while  (expression);
+\end{verbatim}}\noindent
+The statement is executed repeatedly, as long as the expression is true. 
+Note, however, that the statement is always executed at least once, since 
+the test for repetition does not take place until the end of the first
+pass through the loop. The statement can be either simple or compound, and
+should, of course,  include some feature that eventually alters the value of
+the expression.
+
+The program listed below is a marginally improved version of the
+previous program ({\tt iteration.c}) which uses a {\tt do-while} loop to test for
+convergence at the end (as opposed to the beginning) of each iteration loop.
+{\small\begin{verbatim}
+/* iteration1.c */
+/* 
+   Program to solve algebraic equation
+
+    5      2 
+   x  + a x  - b = 0
+
+   by iteration. Easily shown that equation must have at least
+   one real root. Coefficients a and b are supplied by user.
+
+   Iteration scheme is as follows:
+
+                    2  0.2
+   x    =  ( b - a x  )
+    n+1             n
+
+   where x_n is nth iteration. User must supply initial guess for x.
+   Iteration continues until relative change in x per iteration is 
+   less than eps (user supplied) or until number of iterations exceeds 
+   NITER. Program aborts if (b - a x*x) becomes negative. 
+*/
+
+#include <stdio.h>
+#include <math.h>
+#include <stdlib.h>
+
+/* Set max. allowable no. of iterations */
+#define NITER 30  
+
+int main() 
+{
+  double a, b, eps, x, x0, dx, d;
+  int count = 0;
+
+  /* Read input data */
+  printf("\na = ");
+  scanf("%lf", &a);
+  printf("b = ");
+  scanf("%lf", &b);
+  printf("eps = ");
+  scanf("%lf", &eps);
+
+  /* Read initial guess for x */
+  printf("\nInitial guess for x = ");  
+  scanf("%lf", &x);
+  x0 = x;
+
+  do   // Start iteration loop
+   {
+    /* Check for too many iterations */
+    ++count;
+    if (count > NITER) 
+     {
+      printf("\nError: no convergence\n");
+      exit(1);
+     }
+
+    /* Reject complex roots */
+    d = b - a * x * x;
+    if (d < 0.)     
+     {
+      printf("Error: complex roots - try another initial guess\n");
+      exit(1);
+     }
+
+    /* Perform iteration */
+    x = pow(d, 0.2);
+    dx = fabs( (x - x0) / x );
+    x0 = x;
+
+    /* Output data on iteration */
+    printf("Iter = %3d   x = %8.4f   dx = %12.3e\n", count, x, dx);
+
+   } while (dx > eps);  // Test for convergence
+
+  return 0;
+}
+\end{verbatim}}\noindent
+The output from the above program is essentially identical to that from the
+program {\tt iteration.c}. 
+
+The {\tt while} and {\tt do-while} statements are particularly well
+suited to looping situations in which the number of passes through the
+loop {\em is not}\/ known in advance. Conversely,  situations in which
+the number of passes through the loop {\em is}\/ known in advance are often
+best dealt with using a {\tt for} statement. The general form of
+a {\tt for} statement is
+{\small\begin{verbatim}
+for  (expression 1;  expression 2;  expression 3)  statement
+\end{verbatim}}\noindent
+where {\tt expression\,1} is used to initialize some parameter (called an
+{\em index}) that controls the looping action, {\tt expression\,2} represents
+a condition that must be true for the loop to continue execution, and
+{\tt expression\,3} is used to alter the value of the parameter
+initially assigned by {\tt expression\,1}. When a {\tt for} statement
+is executed, {\tt expression\,2} is evaluated and tested at the
+{\em beginning}\/ of each pass through the loop, whereas {\tt expression\,3}
+is evaluated at the {\em end}\/ of each pass. 
+
+The program listed below uses a {\tt for} statement to evaluate the
+factorial of a non-negative integer.
+{\small\begin{verbatim}
+/* factorial.c */
+/* 
+   Program to evaluate factorial of non-negative
+   integer n supplied by user.
+*/
+
+#include <stdio.h>
+#include <stdlib.h>
+
+int main()
+{
+  int n, count;
+  double fact = 1.;
+  
+  /* Read in value of n */
+  printf("\nn = ");
+  scanf("%d", &n);
+
+  /* Reject negative value of n */
+  if (n < 0) 
+   {
+    printf("\nError: factorial of negative integer not defined\n");
+    exit(1);
+   }
+
+  /* Calculate factorial */
+  for (count = n; count > 0; --count) fact *= (double) count;
+
+  /* Output result */
+  printf("\nn = %5d    Factorial(n) = %12.3e\n", n, fact);
+
+  return 0;
+}
+\end{verbatim}}\noindent
+The typical output from the above program is shown below:
+{\small\begin{verbatim}
+n = 6
+ 
+n =     6    Factorial(n) =    7.200e+02 
+%
+\end{verbatim}}
+
+The statements which occur within {\tt if-else}, {\tt while}, {\tt do-while}, or
+{\tt for} statements can themselves be control statements, giving rise to
+the possibility of nested {\tt if-else} statements, conditionally executed loops, nested loops,
+{\em etc.} When dealing with nested control statements, it is vital to adhere religiously to the
+syntax rules described above, in order to avoid confusion.
+
+\section{Functions}
+We have seen that C supports the use of predefined library functions which are
+used to carry out a large number of commonly occurring  tasks. However, C also allows programmers
+to define their own functions. The use of programmer-defined functions permits a
+large program to be broken down into a number of smaller, self-contained units.
+In other words, a C program can be {\em modularized}\/ via the sensible use of programmer-defined functions.
+In general, modular programs are far easier to write and debug than monolithic programs.
+Furthermore, proper modularization allows other people to grasp the logical structure of a
+program with far greater ease than would otherwise be the case.
+
+A {\em function} is a self-contained program segment that carries out some specific,
+well-defined task. Every C program consists of one or more functions. One of these
+functions must be called {\tt main}. Execution of the program  always begins by
+carrying out the instructions contained in {\tt main}. 
+Note that if a program contains multiple functions then their definitions may appear in {\em any order}.
+The same function can be accessed from several different places within a program. Once the
+function has carried out its intended action, control is returned to the point from
+which the function was accessed. Generally speaking, a function processes information passed to
+it from the calling portion of the program, and returns a {\em single value}. Some functions,
+however, accept information but do not return anything.
+
+A function definition has two principal components: the {\em first line} (including the
+{\em argument declarations}), and the so-called {\em body}\/ of the function.
+
+The first line of a function takes the general form
+{\small\begin{verbatim}
+data-type  name(type 1  arg 1,  type 2  arg 2,  ...,  type n  arg n)
+\end{verbatim}}\noindent
+where {\tt data-type} represents the data type of the item that is returned by the
+function, {\tt name} represents the name of the function, and {\tt type 1, type 2, \ldots, type n}
+represent the data types of the arguments {\tt arg 1, arg 2, \ldots, arg n}. The allowable data types
+for a function are:
+{\small\begin{verbatim}
+int       for a function which returns an integer value
+double    for a function which returns an floating-point value
+void      for a function which does not return any value
+\end{verbatim}}\noindent
+The allowable data types  for a function's arguments are {\tt int} and {\tt double}. Note that
+the identifiers used to reference the arguments of a function are {\em local}, in the sense
+that they are not recognized outside of the function. Thus, the argument names in a function
+definition {\em need not}\/ be the same as those used in the
+segments of the program from which the function was called. 
+However, the corresponding data types of the arguments must always match.
+
+The body of a function is a compound statement that defines the action to be taken by the
+function. Like a regular compound statement, the body can contain expression statements, control
+statements, other compound statements, {\em etc.} 
+The body can even access other functions. In fact, it can even access
+itself---this process is known as {\em recursion}. 
+In addition, however, the body must
+include one or more {\tt return} statements in order to return a value
+to the calling portion of the program. 
+
+A {\tt return} statement causes the program logic to return to the point in the program from which the
+function was accessed.
+The general form of a {\tt return} statement is:
+{\small\begin{verbatim}
+return  expression;
+\end{verbatim}}\noindent
+This statement causes the value of {\tt expression} to be  returned to the calling
+part of the program. Of course, the data type of {\tt expression} should match the declared
+data type of the function. For a {\tt void} function, which does not return any value, the
+appropriate {\tt return} statement is simply:
+{\small\begin{verbatim}
+return;
+\end{verbatim}}\noindent
+A maximum of {\em one}\/ expression can be included in a {\tt return} statement. Thus, a function
+can  return a maximum of one value to the calling part of the program.
+However,  a function definition
+can include multiple {\tt return} statements, each containing a different expression, which
+are conditionally executed, depending on the program logic.
+
+Note that, by convention, the {\tt main} function is of type {\tt int} and returns the integer
+value {\tt 0} to the operating system, indicating the error-free termination of the
+program. In its simplest form, the
+{\tt main} function possesses {\em no} arguments. The library function call {\tt exit(1)}, employed
+in previous example programs, causes the execution of a program to abort, returning the integer value
+{\tt 1} to the operating system, which (by convention) indicates that the program terminated with an
+error status. 
+
+The program segment listed below shows how the previous program {\tt factorial.c} can be converted
+into a function {\tt factorial(n)} which returns the factorial (in the form of a floating-point number) of
+the non-negative integer {\tt n}:
+{\small\begin{verbatim}
+double factorial(int n) 
+{
+  /* 
+     Function to evaluate factorial (in floating-point form)
+     of non-negative integer n.
+  */
+
+  int count;
+  double fact = 1.;
+
+  /* Abort if n is negative integer */
+  if (n < 0) 
+   {
+    printf("\nError: factorial of negative integer not defined\n");
+    exit(1);
+   }
+
+  /* Calculate factorial */
+  for (count = n; count > 0; --count) fact *= (double) count;
+
+  /* Return value of factorial */
+  return fact;      
+}
+\end{verbatim}}\noindent
+
+A function can be accessed, or {\em called},  by specifying its name, followed by a list
+of arguments enclosed in parentheses and separated by commas. If the function call
+does not require any arguments then an empty pair of parentheses must follow the
+name of the function. The function call may be part of a simple expression, such as
+an assignment statement, or it may be one of the operands within a more complex
+expression. The arguments appearing in a function call may be expressed as constants, single
+variables, or more complex expressions. However, both the number and the types of the
+arguments must match those in the function definition. 
+
+The program listed below ({\tt printfact.c}) uses the function {\tt factorial()}, described above,
+to print out the factorials of all the integers between 0 and 20:
+{\small\begin{verbatim}
+/* printfact.c */
+/*
+  Program to print factorials of all integers
+  between 0 and 20
+*/
+
+#include <stdio.h>
+#include <stdlib.h>
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+double factorial(int n) 
+{
+  /* 
+     Function to evaluate factorial (in floating-point form)
+     of non-negative integer n.
+  */
+
+  int count;
+  double fact = 1.;
+
+  /* Abort if n is negative integer */
+  if (n < 0) 
+   {
+    printf("\nError: factorial of negative integer not defined\n");
+    exit(1);
+   }
+
+  /* Calculate factorial */
+  for (count = n; count > 0; --count) fact *= (double) count;
+
+  /* Return value of factorial */
+  return fact;      
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+int main()
+{
+  int j;
+
+  /* Print factorials of all integers between 0 and 20 */
+  for (j = 0; j <= 20; ++j) 
+    printf("j = %3d    factorial(j) = %12.3e\n", j, factorial(j));
+
+  return 0;
+}
+\end{verbatim}}\noindent
+Note that the call to {\tt factorial()} takes place inside a complex expression
+({\em i.e.}, a {\tt printf()} function call). Note also that the argument of
+{\tt factorial()} has a different name (but the same data type) in the two sections
+of the program ({\em i.e.}, in the {\tt main()} function and the {\tt factorial()} function). 
+The output from the above program looks like:
+{\small\begin{verbatim}
+j =   0    factorial(j) =    1.000e+00
+j =   1    factorial(j) =    1.000e+00
+j =   2    factorial(j) =    2.000e+00
+j =   3    factorial(j) =    6.000e+00
+j =   4    factorial(j) =    2.400e+01
+j =   5    factorial(j) =    1.200e+02
+j =   6    factorial(j) =    7.200e+02
+j =   7    factorial(j) =    5.040e+03
+j =   8    factorial(j) =    4.032e+04
+j =   9    factorial(j) =    3.629e+05
+j =  10    factorial(j) =    3.629e+06
+j =  11    factorial(j) =    3.992e+07
+j =  12    factorial(j) =    4.790e+08
+j =  13    factorial(j) =    6.227e+09
+j =  14    factorial(j) =    8.718e+10
+j =  15    factorial(j) =    1.308e+12
+j =  16    factorial(j) =    2.092e+13
+j =  17    factorial(j) =    3.557e+14
+j =  18    factorial(j) =    6.402e+15
+j =  19    factorial(j) =    1.216e+17
+j =  20    factorial(j) =    2.433e+18      
+%
+\end{verbatim}}
+
+Ideally, function definitions should always {\em precede}\/ the corresponding
+function calls in a C program. This
+requirement  can usually
+be satisfied by judicious ordering of the various functions which make up a program, but, almost
+inevitably, restricts the location of the {\tt main()} function to the {\em end}\/ of the program. Hence,
+if the order of the two functions in the above program [{\em i.e.}, {\tt factorial()} and {\tt main()}] were
+{\em swapped}\/  then an error message would be generated on compilation, since an attempt would be made
+to call {\tt factorial()} prior to its definition.
+Unfortunately, for the sake of logical clarity, most C programmers prefer to place the {\tt main()} function
+at the {\em beginning} of their programs. After all, {\tt main()} is always the first part of
+a program to be executed. In such situations, function calls [within {\tt main()}] are bound to
+precede the corresponding function definitions: fortunately, 
+however, compilation errors can be avoided by using a
+construct known as a {\em function prototype}. 
+
+Function prototypes are conventionally placed at the beginning of a program 
+({\em i.e.}, before the {\tt main()}
+function) and are used to inform the compiler of the name, data type, and number and data types
+of the arguments, of all user-defined functions employed in the program. The general form of
+a function prototype is
+{\small\begin{verbatim}
+data-type  name(type 1,  type 2,  ...,  type n);
+\end{verbatim}}\noindent
+where {\tt data-type} represents the data type of the item returned by the
+referenced function, {\tt name} is the name of the function, and {\tt type 1, type 2,\ldots, type n}
+are the data types of the arguments of the function. Note that it is not necessary to specify
+the names of the arguments in a function prototype. Incidentally, the function prototypes for
+predefined library functions are contained within the associated header files which must be
+included at the beginning of every program which uses these functions.
+
+
+The program listed below is a modified version of {\tt printfact.c} in which the {\tt main()} function
+is the first function to be defined:
+{\small\begin{verbatim}
+/* printfact1.c */
+/*
+  Program to print factorials of all integers
+  between 0 and 20
+*/
+
+#include <stdio.h>
+#include <stdlib.h>
+
+/* Prototype for function factorial() */
+double factorial(int);    
+
+int main()
+{
+  int j;
+
+  /* Print factorials of all integers between 0 and 20 */
+  for (j = 0; j <= 20; ++j) 
+    printf("j = %3d    factorial(j) = %12.3e\n", j, factorial(j));
+
+  return 0;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+double factorial(int n) 
+{
+  /* 
+     Function to evaluate factorial (in floating-point form)
+     of non-negative integer n.
+  */
+
+  int count;
+  double fact = 1.;
+
+  /* Abort if n is negative integer */
+  if (n < 0) 
+   {
+    printf("\nError: factorial of negative integer not defined\n");
+    exit(1);
+   }
+
+  /* Calculate factorial */
+  for (count = n; count > 0; --count) fact *= (double) count;
+
+  /* Return value of factorial */
+  return fact;      
+}
+\end{verbatim}}\noindent
+Note the presence of the function prototype for {\tt factorial()} prior to the definition
+of  {\tt main()}. This is needed because the program calls {\tt factorial()} before this function
+has been
+defined. 
+ The output from  the above program is identical to that from {\tt printfact.c}.
+
+It is generally considered to be good programming practice to provide function prototypes for
+{\em all}\/ user-defined functions accessed in a program, whether or not they are strictly
+required by the compiler.\footnote{Function prototypes are a requirement for all
+user-defined functions in C++ programs.} The reason for this is fairly simple. If we
+provide a prototype for a given function then the compiler can carefully compare each
+use of the function, within the program, with this prototype so as to determine whether
+or not we are calling the function properly. In the absence of a prototype, an
+incorrect call to a function ({\em e.g.}, using the wrong number of arguments, or
+arguments of the wrong data type) can give rise to run-time errors which are difficult
+to diagnose.
+
+When a single value is passed to a function as an argument then the value of that argument
+is simply {\em copied}\/ to the function. Thus, the  argument's value can subsequently
+be altered within the function
+but this {\em will  not}\/ affect its value in the calling routine. This
+procedure for passing the value of an argument to a function is called {\em passing by value}.
+
+Passing an argument by value has advantages and disadvantages. The advantages are that
+it allows a single-valued argument to be written as an expression, rather than being restricted
+to a single variable. Furthermore, in cases where  the argument is a variable, the value of
+this variable is {\em protected}\/ from alterations which take place within the function.
+The main disadvantage is that information cannot be transferred back to the calling
+portion of the program via arguments. In other words, passing by value is a strictly
+{\em one-way}\/ method of transferring information. The program listed below, which is another
+modified version of {\tt printfact.c}, illustrates this point:
+{\small\begin{verbatim}
+/* printfact2.c */
+/*
+  Program to print factorials of all integers
+  between 0 and 20
+*/
+
+#include <stdio.h>
+#include <stdlib.h>
+
+/* Prototype for function factorial() */
+double factorial(int);    
+
+int main() 
+{
+  int j;
+
+  /* Print factorials of all integers between 0 and 20 */
+  for (j = 0; j <= 20; ++j) 
+    printf("j = %3d    factorial(j) = %12.3e\n", j, factorial(j));
+
+  return 0;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+double factorial(int n) 
+{
+  /* 
+     Function to evaluate factorial (in floating-point form)
+     of non-negative integer n.
+  */
+
+  double fact = 1.;
+
+  /* Abort if n is negative integer */
+  if (n < 0) 
+   {
+    printf("\nError: factorial of negative integer not defined\n");
+    exit(1);
+   }
+
+  /* Calculate factorial */
+  for (; n > 0; --n) fact *= (double) n;
+
+  /* Return value of factorial */
+  return fact;      
+}
+\end{verbatim}}\noindent
+Note that the function {\tt factorial()} has been modified such that its integer
+argument {\tt n} is also used as the index  in a {\tt for} statement. Thus, the
+value of this argument is {\em modified}\/ within the function. Nevertheless, the output of the
+above program is identical to that from {\tt printfact.c}, since the modifications
+to {\tt n} are {\em not}\/ passed back to the main part of the program. Note, incidentally, the use
+of a null initialization expression in the {\tt for} statement appearing in 
+{\tt factorial()}. 
+
+\section{Pointers}
+One of the main characteristics of a  scientific program is that {\em large amounts}\/ of
+numerical information are exchanged between the various functions which make up
+the program. It is generally most convenient to pass this information via the
+{\em argument lists}, rather than the {\em names}, of the these functions. After all, only
+one number can be passed via a function name, whereas scientific programs generally require far more
+than one number to be passed during a function call. Hence, the functions employed in
+scientific programs generally return no values via their names ({\em i.e.}, they tend to be of
+data type {\tt void}) but possess large strings of arguments. There is one obvious
+problem with this approach. Namely, a {\tt void} function which passes all of its arguments by
+value is incapable of returning any information to the program segment from which it was called. 
+Fortunately, there is a way of getting around this difficulty: we can pass the arguments
+of a function by {\em reference}, rather than by {\em value}, using constructs known as {\em pointers}. 
+This allows the  {\em two-way}\/ communication of information via arguments during function calls. 
+Pointers are discussed in the following. 
+
+Suppose that {\tt v} is a variable in a C program which represents some particular data item.
+Of course, the program stores this data item at some particular location in the computer's memory. 
+The data item can thus be accessed if we know its location, or {\em address}, in computer
+memory. The address of {\tt v}'s memory location is determined by the expression \verb{&v{,
+where \verb{&{ is a unary operator known as the {\em address operator}. 
+
+Suppose that we assign the address of {\tt v} to another variable {\tt pv}. In other
+words,
+{\small\begin{verbatim}
+pv = &v
+\end{verbatim}}\noindent
+This new variable is called a {\em pointer}\/ to {\tt v}, since it points to the location where
+{\tt v} is stored in memory. Remember, however, that {\tt pv} represents {\tt v}'s address, and {\em not}\/
+its value. 
+
+The data item represented by {\tt v} ({\em i.e.}, the data item stored at {\tt v}'s
+memory location) can be accessed via the expression \verb{*pv{, where \verb{*{ is a unary
+operator, called the {\em indirection operator}, which only operates on pointer variables. 
+Thus, \verb{*pv{ and {\tt v} both represent the same data item. Furthermore,
+if we write \verb{pv = &v{ and \verb{u = *pv{ then both {\tt u} and {\tt v} represent
+the same value. 
+
+The simple program listed below illustrates some of the points made above:
+{\small\begin{verbatim}
+/* pointer.c */
+/* 
+   Simple illustration of the action of pointers
+*/
+
+#include <stdio.h>
+
+main() 
+{
+  int u = 5;     
+  int v;
+  int *pu;      // Declare pointer to an integer variable
+  int *pv;      // Declare pointer to an integer variable
+
+  pu = &u;      // Assign address of u to pu
+  v = *pu;      // Assign value of u to v
+  pv = &v;      // Assign address of v to pv
+
+  printf("\nu = %d  &u = %X  pu = %X  *pu = %d", u, &u, pu, *pu);
+  printf("\nv = %d  &v = %X  pv = %X  *pv = %d\n", v, &v, pv, *pv);
+
+  return 0;
+}
+\end{verbatim}}\noindent
+Note that {\tt pu} is a pointer to {\tt u}, whereas {\tt pv} is a pointer to {\tt v}. Incidentally,
+the conversion character {\tt X}, which appears in the control strings of the 
+above {\tt printf()} 
+function calls, indicates that the associated data item should be output as a
+{\em hexadecimal number}---this is the conventional method of representing an address in computer memory.
+Execution of the above program yields the following output:
+{\small\begin{verbatim}
+u = 5  &u = BFFFFA24  pu = BFFFFA24  *pu = 5
+v = 5  &v = BFFFFA20  pv = BFFFFA20  *pv = 5         
+%
+\end{verbatim}}\noindent
+In the first line, we see that {\tt u} represents the value {\tt 5}, as specified in its declaration
+statement. The address of {\tt u} is determined automatically by the compiler to be
+{\tt BFFFFA24} (hexadecimal). The pointer {\tt pu} is assigned this value. Finally, the
+value to which {\tt pu} points is {\tt 5}, as expected. Similarly, the second line
+shows that {\tt v} also represents the value {\tt 5}. This is as expected, since we assigned
+the value \verb{*pu{ to {\tt v}. The address of {\tt v} is {\tt BFFFFA20}. Of course,
+{\tt u} and {\tt v} have different addresses. 
+
+The unary operators \verb{&{ and \verb{*{ are members of the same precedence group
+as the other unary operators ({\em e.g.}, \verb{++{ and \verb{--{). The
+address operator (\verb{&{) can only act upon operands which possess a unique
+address, such as ordinary variables. Thus, the address operator {\em cannot}\/ act upon
+arithmetic expression, such as \verb{2 * (u + v){. The indirection operator (\verb{*{)
+can only act upon operands which are pointers.
+
+Pointer variables, like all other variables, must be declared before they can appear in
+executable statements. A pointer declaration takes the general form
+{\small\begin{verbatim}
+data-type  *ptvar;
+\end{verbatim}}\noindent
+where {\tt ptvar} is the name of the pointer variable, and {\tt data-type} is the
+data type of the data item towards which the pointer points. Note that an asterisk must always
+ precede the name of a pointer variable in a pointer declaration. 
+
+Referring to Sect.~\ref{sio}, we can now appreciate that the mysterious asterisk
+which appears in the declaration of an input/output stream, {\em e.g.},
+{\small\begin{verbatim}
+FILE  *stream;
+\end{verbatim}}\noindent
+is there because {\tt stream} is a pointer variable (pointing towards an
+object of the special data type {\tt FILE}). In fact, {\tt stream} points
+towards the beginning of the associated input/output stream in memory.
+
+Pointers are often passed to a function as arguments. This allows data items
+within the calling part of the program to be accessed by the function, altered within the
+function, and then passed back to the calling portion of the program in altered form. This
+use of pointers is referred to as passing arguments by {\em reference}, rather than by value.
+
+When an argument is passed by value, the associated data item is simply copied to the function.
+Thus, any alteration to the data item within the function is not passed back to the calling routine.
+When an argument is passed by reference, however, the {\em address}\/ of the associated data item
+is passed to the function. The contents of this address can be freely accessed by both
+the function and the calling routine. Furthermore, any changes made to the data item stored at
+this address are recognized by both the function and the calling routine. Thus, the use of a
+pointer as an argument allows the {\em two-way}\/ communication of information between a function and
+its calling routine. 
+
+The program listed below, which is yet another modified version of {\tt printfact.c}, uses
+a pointer to pass back information from a function to its calling routine:
+{\small\begin{verbatim}
+/* printfact3.c */
+/*
+  Program to print factorials of all integers
+  between 0 and 20
+*/
+
+#include <stdio.h>
+#include <stdlib.h>
+
+/* Prototype for function factorial() */
+void factorial(int, double *);    
+
+int main() 
+{
+  int j;
+  double fact;
+
+  /* Print factorials of all integers between 0 and 20 */
+  for (j = 0; j <= 20; ++j) 
+   {
+    factorial(j, &fact);
+    printf("j = %3d    factorial(j) = %12.3e\n", j, fact);
+   }
+  return 0;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void factorial(int n, double *fact) 
+{
+  /* 
+     Function to evaluate factorial *fact (in floating-point form)
+     of non-negative integer n.
+  */
+
+  *fact = 1.;
+
+  /* Abort if n is negative integer */
+  if (n < 0) 
+   {
+    printf("\nError: factorial of negative integer not defined\n");
+    exit(1);
+   }
+
+  /* Calculate factorial */
+  for (; n > 0; --n) *fact *= (double) n;
+
+  return;      
+}
+\end{verbatim}}\noindent
+The output from this program is again identical to that from {\tt printfact.c}. Note that
+the function {\tt factorial()} has been modified such that there is no data item associated with its
+ name ({\em i.e.}, the function is of data type {\tt void}). However, the argument list
+of this function has been extended such that there are now {\em two}\/ arguments. As before, the
+first argument is the value of the positive integer {\tt n} whose factorial is to be
+evaluated by the function. The second argument, {\tt fact},  is a {\em pointer}\/ which passes back
+the factorial of {\tt n} (in the form of a floating-point number) to the main
+part of the program. Incidentally, the compiler knows that {\tt fact} is a pointer
+because its name is proceeded by an {\em asterisk}\/ in the argument declaration for {\tt factorial()}. 
+Of course, in the body of the function, reference is made to
+\verb{*fact{ ({\em i.e.}, the value of the data item stored in the memory location
+towards which {\tt fact} points) rather than \verb{fact{ ({\em i.e.}, the address of the
+memory location towards which \verb{fact{ points). Note that a {\tt void} function, which
+returns no value, can only
+be called via
+a statement consisting of the function name followed by a list of its arguments (in parentheses and
+separated by commas). Thus, the function {\tt factorial()} is called in the main part of the
+program via the statement
+{\small\begin{verbatim}
+factorial(j, &fact);
+\end{verbatim}}\noindent
+This statement passes the integer value {\tt j} to {\tt factorial()}, which, in turn, passes
+back the value of the factorial of {\tt j} via its second argument. Note that since the second
+argument is passed by reference, rather than by value, it is written \verb{&fact{ ({\em i.e.}, the address
+of the memory location where the floating-point value {\tt fact} is stored)
+rather than {\tt fact} ({\em i.e.}, the value of the floating-point variable {\tt fact}).
+Note,  finally,
+that the function prototype for {\tt factorial()} takes the form
+{\small\begin{verbatim}
+void factorial(int, double *);
+\end{verbatim}}\noindent
+Here, the {\em asterisk}\/ after {\tt double} indicates that the second argument is a {\em pointer} to
+a floating-point data item.
+
+We can now appreciate that the mysterious ampersands which must precede variable names in
+{\tt scanf()} calls: {\em e.g.}, 
+{\small\begin{verbatim}
+scanf("%d %lf %lf", &k, &x, &y);
+\end{verbatim}}\noindent
+are not so mysterious, after all. {\tt scanf()} is a  function which returns data
+to its calling routine via its arguments (excluding its first argument, which is a control string).
+Hence, these arguments must be passed to {\tt scanf()} by {\em reference}, 
+rather than by {\em value}, otherwise they would be unable
+to pass information back to the calling routine. It follows that we must pass the {\em addresses}\/ of variables
+({\em e.g.}, \verb{&k{) to {\tt scanf()}, rather than the {\em values}\/ of these variables ({\em e.g.}, \verb{k{).
+Note that since the {\tt printf()} function does not return any information
+to its calling routine via its arguments, there is no need to pass these
+ arguments by reference---passing by value
+is fine. This explains why there are no ampersands in the argument list of a {\tt printf()} function.
+
+A pointer to a function can be passed to another function as an argument. This allows
+one function to be transferred to another, as though the first function were a
+variable. This is very useful in scientific programming. Imagine that we have a routine
+which numerically integrates a general one-dimensional function. Ideally, we would like to use
+this routine to integrate more than one specific function. We can achieve this by passing (to the routine) the
+name of the function to be integrated as an argument. Thus, for example, we can use the {\em same}\/ routine
+to integrate a polynomial,  a trigonometric function, or a logarithmic function. 
+
+	Let us refer to the function whose name is passed as an argument as the
+{\em guest function}. Likewise, the function to which this name is passed is called the
+{\em host function}. A pointer to a guest function is identified in the host function definition by
+an entry of the form
+{\small\begin{verbatim}
+data-type  (*function-name)(type 1,  type 2, ...)
+\end{verbatim}}\noindent
+in the host function's argument declaration.\footnote{The parenthesis around {\tt *function-name}
+are very important:\\
+{\tt data-type  *function-name(type 1,  type 2, ...)}
+is interpreted by the compiler as a reference to a function which returns a pointer
+to type {\tt data-type}, rather than a pointer to a function which returns type {\tt data-type}.}
+ Here, {\tt data-type} is the data type of the
+guest function, {\tt function-name} is the local name of the guest function in the host function
+definition, and {\tt type 1, type 2, \ldots} are the data types of the guest function's arguments.
+The pointer to the guest function also requires an entry of the form
+{\small\begin{verbatim}
+data-type  (*)(type 1,  type 2,  ...)
+\end{verbatim}}\noindent
+in the argument declaration of the  host function's prototype.
+ The guest function
+can be accessed within the host function definition by means of the indirection operator. To
+achieve this, the indirection operator must precede the guest function name, and both the
+indirection operator and the guest function name must be enclosed in parenthesis: {\em i.e.}, 
+{\small\begin{verbatim}
+(*function-name)(arg 1,  arg 2,  ...)
+\end{verbatim}}\noindent
+Here, {\tt arg 1, arg 2,\ldots} are the arguments passed to the guest function.
+Finally, the name of a
+guest function is passed to the host function, during a call to the latter function, via an
+entry like
+{\small\begin{verbatim}
+function-name
+\end{verbatim}}\noindent
+in the host function's argument list. 
+
+The program listed below is a rather silly example which illustrates the passing
+of function names as arguments to another function:
+{\small\begin{verbatim}
+/* passfunction.c */
+/*
+  Program to illustrate the passing of function names as
+  arguments to other functions via pointers
+*/
+
+#include <stdio.h>
+
+/* Function prototype for host fun. */
+void cube(double (*)(double), double, double *); 
+                                                
+double fun1(double);    // Function prototype for first guest function
+double fun2(double);    // Function prototype for second guest function
+
+int main() 
+{
+  double x, res1, res2;
+
+  /* Input value of x */
+  printf("\nx = ");
+  scanf("%lf", &x);
+
+  /* Evaluate cube of value of first guest function at x */
+  cube(fun1, x, &res1);
+
+  /* Evaluate cube of value of second guest function at x */
+  cube(fun2, x, &res2);
+
+  /* Output results */
+  printf("\nx = %8.4f   res1 = %8.4f   res2 = %8.4f\n", x, res1, res2);
+  
+  return 0;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void cube(double (*fun)(double), double x, double *result) 
+{
+  /*
+    Host function: accepts name of floating-point guest function 
+    with single floating-point argument as its first argument, 
+    evaluates this function at x (the value of its second argument), 
+    cubes the result, and returns final result via its third argument.
+  */
+
+  double y;
+
+  y = (*fun)(x);        // Evaluate guest function at x
+  *result = y * y * y;  // Cube value of guest function at x
+
+  return;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+double fun1(double z) 
+{
+  /*
+    First guest function
+  */
+
+  return 3.0 * z * z - z;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+double fun2(double z) 
+{
+  /*
+    Second guest function
+  */
+  
+  return 4.0 * z  - 5.0 * z * z * z;
+}
+\end{verbatim}}\noindent
+In the above program, the function {\tt cube()} accepts the name of a guest
+function (with one argument) as its first argument, evaluates this function
+at {\tt x} (the value of its second argument, which is ultimately specified by the user), 
+cubes the result, and then passes
+the final result back to the main part of the program via its third argument (which,
+of course, is a pointer). The two guest functions, {\tt fun1()} and {\tt fun2()}, whose names are
+passed to {\tt cube()}, are both simple polynomials. The output from the
+above program looks like:
+{\small\begin{verbatim}
+x = 2  
+
+x =   2.0000   res1 = 1000.0000   res2 = -32768.0000
+%
+\end{verbatim}}
+
+\section{Global Variables} 
+We have seen that a general C program is basically a collection of functions. Furthermore, the
+variables used by these functions are {\em local}\/ in scope: {\em i.e.,} a variable defined in
+one function is not recognized in another. The main method of transferring data from one
+function to another is via the argument lists in function calls. Arguments can be passed
+in one of two different manners. When an argument is passed by {\em value}\/ then the value of
+a local variable (or expression) in the calling routine is copied to a local variable in
+the function which is called. When an argument is passed by {\em reference}\/ then a local variable
+in the calling routine shares the same memory location as a local variable in the function
+which is called: hence, a change in one variable is automatically mirrored in the other.
+However, there is a {\em third}\/ method of transferring information from one function to another.
+It is possible to define variables which are {\em global}\/ in extent: such variables are recognized by
+{\em all}\/ the functions making up the program, and have the {\em same}\/ values in all of these functions.
+
+The C compiler recognizes a variable as global, as opposed to local,  because its declaration
+is located {\em outside} the scope of any of the functions making up the program. Of course,
+a global variable can only be used in an executable statement {\em after} it has been declared. Hence,
+the natural place to put global variable declaration statements is {\em before} any function definitions:
+{\em i.e.}, right at the beginning of the program}. Global variables declarations can be used to
+initialize such variables, in the regular manner. However, the initial values must be expressed as
+constants, rather than expressions. Furthermore, the initial values are only assigned once, at the
+beginning of the program.
+
+The program listed below is yet another version of {\tt printfact.c}, in which
+communication between the two sections of the program takes place entirely via
+global variables:
+{\small\begin{verbatim}
+/* printfact4.c */
+/*
+  Program to print factorials of all integers
+  between 0 and 20
+*/
+
+#include <stdio.h>
+#include <stdlib.h>
+
+/* Prototype for function factorial() */
+void factorial();
+   
+/* Global variable declarations */
+int j;             
+double fact;
+
+int main() 
+{
+  /* Print factorials of all integers between 0 and 20 */
+  for (j = 0; j <= 20; ++j) 
+   {
+    factorial();
+    printf("j = %3d    factorial(j) = %12.3e\n", j, fact);
+   }
+  return 0;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void factorial() 
+{
+  /* 
+     Function to evaluate factorial (in floating-point form)
+     of non-negative integer j. Result stored in variable fact.
+  */
+
+  int count;
+
+  /* Abort if j is negative integer */
+  if (j < 0) 
+   {
+    printf("\nError: factorial of negative integer not defined\n");
+    exit(1);
+   }
+
+  /* Calculate factorial */
+  for (count = j, fact = 1.; count > 0; --count) fact *= (double) count;
+
+  return;      
+}
+\end{verbatim}}\noindent
+The output from the above program is identical to that from {\tt printfact.c}. Observe that
+the global variable {\tt j} is used to pass the integer value whose factorial is to
+be calculated from the main part of the program to the function {\tt factorial()}, whilst the 
+global variable {\tt fact} is used to pass the calculated factorial back to the main part
+of the program. Incidentally, note the use of multiple initialization statements (separated by commas)
+in the {\tt for} statement appearing in {\tt factorial()}.  
+
+Global variables should be used {\em sparingly} in scientific programs (or any other type of
+program), since  there are inherent dangers in their employment. An alteration in the
+value of a global variable within a given function is carried over into all  other
+parts of the program. Unfortunately, such an alteration
+ can sometimes happen inadvertently, as the side-effect
+of some other action. Thus, there is the possibility of the value of a global variable
+changing unexpectedly, resulting in a subtle programming error which can be {\em extremely difficult}
+to track down, since the
+offending line could be located {\em anywhere} in the program.
+ Similar errors involving local variables are much easier to debug, since the scope of
+local variables is far more limited than that of global variables. 
+
+\section{Arrays}
+Scientific programs very often deal with multiple data items possessing 
+common characteristics. In such cases, it is often convenient to place the
+data items in question into an {\em array},  so that they all share a common name ({\em e.g.}, {\tt x}). The
+individual data items can be either integers or floating-point numbers. However, they
+all must be of the {\em same}\/ data type. 
+
+In C, an element  of an array ({\em i.e.}, an individual data item)
+is referred to by specifying the array name followed by one or more {\em subscripts}, with each
+subscript enclosed in square brackets. All subscripts must be nonnegative integers. 
+Thus, in
+an {\tt n}-element array called {\tt x}, the array elements are {\tt x[0], x[1], \ldots, x[n-1]}. 
+Note that the first element of the array is {\tt x[0]} and {\em not}\/ {\tt x[1]}, as in other
+programming languages. 
+
+The number of subscripts determines the {\em dimensionality}\/ of an array. For example,
+{\tt x[i]} refers to an element of a one-dimensional array, {\tt x}. Similarly,
+{\tt y[i][j]} refers to an element of a two-dimensional array, {\tt y}, {\em etc.} 
+
+Arrays are declared in much the same manner as ordinary variables, except that each
+array name must be accompanied by a size specification (which specifies the number of elements).
+For a one-dimensional array, the size is specified by a positive integer constant, enclosed in
+square brackets. The generalization for multi-dimensional arrays is fairly obvious. Several
+valid array declarations are shown below:
+{\small\begin{verbatim}
+int j[100];
+double x[20];
+double y[10][20];
+\end{verbatim}}\noindent
+Thus, {\tt j} is a {\tt 100}-element  integer array, {\tt x} is a {\tt 20}-element floating
+point array, and {\tt y} is a {\tt 10x20} floating-point array. Note that
+variable size array declarations, {\em e.g.},
+{\small\begin{verbatim}
+double a[n];
+\end{verbatim}}\noindent
+where {\tt n} is an integer variable, are {\em illegal}\/ in C.
+
+It is sometimes convenient to define an array size in terms of a symbolic constant, rather
+than a fixed integer quantity. This makes it easier to modify a program that
+utilizes an array, since all references to the maximum array size can be altered by simply
+changing the value of the symbolic constant. This approach is used in many of the example
+programs employed  in this course.
+
+Like an ordinary variable, an array can be either {\em local}\/ or {\em global}\/ in extent, depending on whether
+the associated array declaration lies inside or outside, respectively, the scope of any of
+the functions which constitute the program. 
+Both local and global arrays can be initialized
+via their declaration statements.\footnote{Prior to the ANSI standard, to which the GNU C
+compiler adheres, local arrays could not be initialized via
+their declaration statements.} For instance,
+{\small\begin{verbatim}
+int j[5] = {1, 3, 5, 7, 9};
+\end{verbatim}}\noindent
+declares {\tt j} to be a {\tt 5}-element integer array whose elements have the
+initial values {\tt j[0]=1}, {\tt j[1]=3}, {\em etc.}
+
+Single operations which involve entire arrays are {\em not}\/ permitted in C. Thus, if
+{\tt x} and {\tt y} are similar arrays ({\em i.e.}, the same data type, dimensionality,
+and size) then assignment operations, comparison operations, {\em etc.}\ involving
+these two arrays must be carried out on an element by element basis. This is
+usually accomplished within a loop (or within nested loops, for multi-dimensional arrays). 
+
+The program listed below is a simple illustration of the use of arrays in C. The
+program reads  a list of numbers, entered by the user, into a one-dimensional array, {\tt list},
+and then calculates the average of these numbers. The program also calculates and outputs
+the deviation of each number from the average. 
+{\small\begin{verbatim}
+/* average.c */
+/*
+  Program to calculate the average of n numbers and then
+  compute the deviation of each number from the average
+
+  Code adapted from "Programming with C", 2nd Edition, Byron Gottfreid,
+  Schaum's Outline Series, (McGraw-Hill, New York NY, 1996) 
+*/
+
+#include <stdio.h>
+#include <stdlib.h>
+
+#define NMAX 100
+
+int main() 
+{
+  int n, count;
+  double avg, d, sum = 0.;
+  double list[NMAX];
+
+  /* Read in value for n */
+  printf("\nHow many numbers do you want to average? ");
+  scanf("%d", &n);
+  
+  /* Check that n is not too large or too small */
+  if ((n > NMAX) || (n <= 0)) 
+   {
+    printf("\nError: invalid value for n\n");
+    exit(1);
+   }
+
+  /* Read in the numbers and calculate their sum */
+  for (count = 0; count < n; ++count) 
+   {
+    printf("i = %d  x = ", count + 1);
+    scanf("%lf", &list[count]);
+    sum += list[count];
+   }
+
+  /* Calculate and display the average */
+  avg = sum / (double) n;
+  printf("\nThe average is %5.2f\n\n", avg);
+
+  /* Calculate and display the deviations about the average */
+  for (count = 0; count < n; ++count) 
+   {
+    d = list[count] - avg;
+    printf("i = %d  x = %5.2f  d = %5.2f\n", count + 1, list[count], d);
+   }
+  return 0;
+}
+\end{verbatim}}\noindent
+Note the use of the symbolic constant {\tt NMAX} to specify the size of the array {\tt list}, and,
+hence, the maximum number of values which can be averaged. The typical output
+from the above program looks like:
+{\small\begin{verbatim}
+How many numbers do you want to average? 5
+i = 1  x = 4.6
+i = 2  x = -2.3
+i = 3  x = 8.7
+i = 4  x = 0.12
+i = 5  x = -2.7
+ 
+The average is  1.68
+ 
+i = 1  x =  4.60  d =  2.92
+i = 2  x = -2.30  d = -3.98
+i = 3  x =  8.70  d =  7.02
+i = 4  x =  0.12  d = -1.56
+i = 5  x = -2.70  d = -4.38
+%
+\end{verbatim}}
+
+It is important to realize that an
+ array name in C is essentially a {\em pointer}\/ to the first element in that array.\footnote{An
+array name is not exactly equivalent to a pointer, because a pointer can point to any
+address in the computer memory---this address can even be changed---whereas an array name
+is constrained to always point towards the address of its associated first data item.}
+ Thus, if {\tt x}
+is a one-dimensional array then the address of the first array element can be expressed as
+either \verb{&x[0]{ or simply {\tt x}. Moreover, the address of the second array element can be written
+as either \verb{&x[1]{ or {\tt (x+1)}. In general, the address of the {\tt (i+1)}th array element
+can be expressed as either  \verb{&x[i]{ or {\tt (x+i)}. Incidentally, it should be
+understood that {\tt (x+i)} is a rather special type of expression, since {\tt x} represents an
+address, whereas {\tt i} represents an integer quantity. The expression {\tt (x+i)} actually specifies
+the address of the array element which is {\tt i} memory locations offset from the address
+of the first array element (C, of course, stores all elements of an array both contiguously and
+in order in the computer memory). Hence, {\tt (x+i)} is a {\em symbolic representation}\/ of an
+address, rather than an arithmetic expression. 
+
+Since  \verb{&x[i]{ and {\tt (x+i)} both represent the address of the {\tt (i+1)}th element of
+the array {\tt x}, it follows that {\tt x[i]} and \verb{*(x+i){ must both
+represent the contents of that address ({\em i.e.}, the value of the {\tt (i+1)}th element). In
+fact, the latter two terms are {\em completely interchangeable}\/ in C programs.
+
+For the moment, let us concentrate on one-dimensional arrays.
+An entire array can be passed to a function as an argument. To achieve this, the array name
+must appear by itself, without brackets or subscripts, as an argument within the function call.
+The corresponding argument in the function definition must be declared as an array. In order to
+do this, the array name is written followed by an empty pair of square brackets. The size of the
+array is not specified. In a function prototype, an array argument is specified by following the
+data type of the argument by an empty pair of square brackets. 
+
+Since, as we have seen, an array name is essentially a pointer, it is clear that when an array is passed
+to a function  it is passed by {\em reference}, and not by {\em value}. Hence, if any of the
+array elements are altered within the function then these alterations {\em are}\/ recognized
+in the calling portion of the program. Likewise, if an array (rather than an individual array
+element) appears in the argument list of a {\tt scanf()} function then it should {\em not}\/
+be preceded by the address operator (\verb{&{), since an array name already is an address. 
+The reason why arrays in C are always passed by reference is fairly obvious. In order
+to pass an array by value, it is necessary to copy the value of {\em every}\/ element. On the
+other hand, to pass an array by reference it is only necessary to pass the address of the first
+element. Clearly, for large arrays, passing by reference is far more efficient than passing by value.
+
+The program listed below is yet another version of {\tt printfact.c}, albeit a far more
+efficient one than any of those listed previously. In this version, the
+factorials of all the non-zero integers up to 20 are calculated in one fell swoop, by the
+function {\tt factorial()}, 
+using the recursion relation
+\begin{equation}
+(n+1)! = (n+1)\,n!
+\end{equation}
+The factorials are stored as elements of the array {\tt fact[]}, which is passed as an
+argument from
+{\tt factorial()} to the main part of the program.
+{\small\begin{verbatim}
+/* printfact5.c */
+/*
+  Program to print factorials of all integers
+  between 0 and 20
+*/
+
+#include <stdio.h>
+
+/* Function prototype for factorial() */
+void factorial(double []);  
+
+int main() 
+{
+  int j;
+  double fact[21];           // Declaration of array fact[]
+
+  /* Calculate factorials */
+  factorial(fact);
+
+  /* Output results */
+  for (j = 0; j <= 20; ++j) 
+    printf("j = %3d    factorial(j) = %12.3e\n", j, fact[j]);
+
+  return 0;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void factorial(double fact[]) 
+{
+  /*
+    Function to calculate factorials of all integers
+    between 0 and 20 (in form of floating-point
+    numbers) via recursion formula
+
+    (n+1)! = (n+1) n!
+
+    Factorials returned in array fact[0..20]
+  */
+
+  int count;
+
+  fact[0] = 1.;               // Set 0! = 1
+
+  /* Calculate 1! through 20! via recursion */
+  for (count = 0; count < 20; ++count) 
+    fact[count+1] = (double)(count+1) * fact[count];
+
+  return;
+}
+\end{verbatim}}\noindent
+The output from  the above program is identical to that from {\tt printfact.c}. 
+
+It is important to realize that there is {\em no array bound checking}\/ in C. If
+an array {\tt x} is declared to have {\tt 100} elements then the compiler will reserve {\tt 100}
+contiguous, appropriately sized, slots in computer memory on its behalf. The contents of these slots can be
+accessed via expressions of the form {\tt x[i]}, where the integer {\tt i} should lie in the range
+{\tt 0} to {\tt 99}. As we have seen, the compiler interprets {\tt x[i]} to mean the
+contents of the memory slot which is {\tt i} slots along from the beginning of the array. 
+Unfortunately, expressions such as {\tt x[100]} or {\tt x[1000]} are interpreted in a like manner,
+leading the compiler to instruct the executable to
+access memory slots which lie off the end of the memory block 
+reserved for {\tt x}.   Obviously,  accessing elements of an array which do not
+exist is going to produce some sort of error. Exactly what sort of error is very difficult to say---the 
+program may crash, it may produce absurdly incorrect output, it may produce 
+plausible but incorrect output, it may even produce correct output---it all
+depends on exactly what information is being stored in the memory locations surrounding the block
+of memory reserved for {\tt x}. This type of error can be {\em extremely difficult}\/ to debug,
+since it may not be immediately apparent that something has gone wrong when the program is
+executed. It is, therefore, the programmer's responsibility to ensure that {\em all}\/ references to array elements
+lie within the declared bounds of the associated arrays.
+
+ Let us now discuss multi-dimensional arrays in more detail. The elements of a multi-dimensional array
+are stored contiguously in a block of computer memory. In scanning across this block, from
+its start to its end, the order of storage is such than the last subscript of the array
+varies {\em most rapidly}\/ whilst
+the first  varies {\em least rapidly}. For instance, the elements of the
+two-dimensional array {\tt x[2][2]} are stored in the order:
+{\tt x[0][0], x[0][1], x[1][0], x[1][1]}. 
+ The elements of a multi-dimensional array can only
+be addressed if the program is
+ explicitly told the size of the array in its second, third, {\em etc.}\ dimensions.
+It is, therefore, not surprising to learn that when a multi-dimensional array is passed to a
+function, as an argument, then the associated argument declaration within the function definition
+{\em must}\/ include {\em explicit size declarations}\/ in all of the subscript positions {\em except
+the first}. The same is true for a multi-dimensional array argument appearing in a function prototype.
+
+\section{Character Strings}
+The basic C character
+data type is called {\tt char}.
+A character string in C can be represented symbolically as an array of data type {\tt char}. 
+For instance, the declaration
+{\small\begin{verbatim}
+char word[20] = "four";
+\end{verbatim}}\noindent
+initializes the 20-element character array {\tt word}, and then stores the
+character string ``four'' in it. The resulting elements of {\tt word} are
+as follows: 
+{\small\begin{verbatim}
+word[0] = 'f'  word[1] = 'o'  word[2] = 'u'  word[3] =  'r'  word[4] = '\0'
+\end{verbatim}}\noindent
+with the remaining elements undefined. Here, {\tt 'f'} represents the character ``f'', {\em etc.},
+and \verb{'\0'{ represents the so-called {\em null character}\/ (ASCII code 0), which is used
+in C to signal the termination of a character string. The null character is automatically
+added to the end of any character string enclosed in double quotes.
+Note that, since all character strings in C
+must be terminated by the (invisible) null character, it takes a character array of
+size at least {\tt n+1} to store an {\tt n}-letter string.
+
+As with arrays of numbers, the name of a character array is essentially equivalent to
+a pointer to the first element of that array.
+ Hence, \verb{word[i]{ and \verb{*(word + i){ both refer to the
+same character in the character array {\tt word}. Note, however, that the name of
+a character array is not a true pointer, since the address to which it points
+cannot be changed. Of course, we can always represent a character array using
+a true pointer. Consider the declaration
+{\small\begin{verbatim}
+char *word = "four";
+\end{verbatim}}\noindent
+Here, {\tt word} is declared to be a pointer to a {\tt char} which points
+towards the first element of the character string \verb{'f' 'o' 'u' 'r' '\0'{.
+Unlike the name of a character array, a true pointer to a {\tt char} can be
+redirected. Thus,
+{\small\begin{verbatim}
+char *word =  "four";
+. . .
+word = "five";
+\end{verbatim}}\noindent
+is legal,
+whereas
+{\small\begin{verbatim}
+char word[20] =  "four";
+. . .
+word = "five";
+\end{verbatim}}\noindent
+is illegal. Note that, in the former example, the addresses of the first elements
+of the strings ``four'' and ``five'' are probably different.
+Of course, the contents of a character array can always be changed,
+element by element---it is just the address of the first element which must
+remain constant. Thus,
+{\small\begin{verbatim}
+char word[20] =  "four";
+. . .
+word[0] = 'f';
+word[1] = 'i';
+word[2] = 'v';
+word[3] = 'e';
+word[4] = '\0';
+\end{verbatim}}\noindent
+is perfectly legal.
+
+Note, finally, that a character string can be printed via the {\tt printf()}
+function by making use of a \verb{%s{ entry in its control string: {\em e.g.},
+{\small\begin{verbatim}
+printf("word = %s\n", word);
+\end{verbatim}}\noindent
+Here, the second argument, {\tt word}, can either be the name of a character array or a true pointer
+to the first element of a character string.
+
+\section{Multi-File Programs}
+In a program consisting of many different functions, it is often convenient to place
+each function in an individual file, and then use the {\tt  make} utility to compile each file separately and
+link them together to produce an executable. 
+
+There are a few common-sense rules
+associated with multi-file programs. Since a given file is initially compiled {\em separately}\/ from
+the rest of the program, all symbolic constants which appear in that file must be defined at its
+start. Likewise, all referenced library functions 
+must be accompanied by the appropriate references to header files. 
+Also, any referenced user-defined functions   must have their prototypes at the start of the file. 
+Finally, all global variables used in the file must be declared at its start.
+This
+usually means that definitions for common symbolic constants, header files for common library functions,
+prototypes for common user-defined functions, and
+declarations for common global variables will appear in {\em multiple}\/ files. Note that
+a given global variable can only be initialized in {\em one}\/ of its  declaration statements,
+which is regarded as the {\em true declaration}\/ of that variable
+ [conventionally, the
+true declaration appears in the file containing the function {\tt main()}]. Indeed, the 
+other declarations, which we shall term {\em definitions}, 
+ must be preceded by the keyword {\tt extern} to distinguish them from the
+true declaration. 
+
+As an example, let us take the program {\tt printfact4.c}, listed previously, and break it up into
+multiple files, each containing a single function. The files in question are
+called {\tt main.c} and {\tt factorial.c}.  The listings of
+the two files which make up the program are as follows:
+{\small\begin{verbatim}
+/* main.c */
+/*
+  Program to print factorials of all integers
+  between 0 and 20
+*/
+
+#include <stdio.h>
+
+/* Prototype for fucntion factorial() */
+void factorial();    
+
+/* Global variable declarations */
+int j;               
+double fact;
+
+int main() 
+{
+  /* Print factorials of all integers between 0 and 20 */
+  for (j = 0; j <= 20; ++j)
+    {
+      factorial();
+      printf("j = %3d    factorial(j) = %12.3e\n", j, fact);
+    }
+  return 0;
+}
+\end{verbatim}}\noindent
+and
+{\small\begin{verbatim}
+/* factorial.c */
+/* 
+   Function to evaluate factorial (in floating point form)
+   of non-negative integer j. Result stored in variable fact.
+*/
+
+#include <stdio.h>
+#include <stdlib.h>
+
+/* Global variable definitions */
+extern int j;               
+extern double fact;
+
+void factorial() 
+{
+  int count;
+
+  /* Abort if j is negative integer */
+  if (j < 0) 
+    {
+      printf("\nError: factorial of negative integer not defined\n");
+      exit(1);
+    }
+
+  /* Calculate factorial */
+  for (count = j, fact = 1.; count > 0; --count) fact *= (double) count;
+
+  return;      
+}
+\end{verbatim}}\noindent
+Note that all library functions and user-defined functions referenced in each file are
+declared (either via a header file or a function prototype) at the start of that file.
+Note, also, the distinction between the global variable {\em declarations}\/ in the file
+{\tt main.c} and the global variable {\em definitions}\/ in the file {\tt factorial.c}.
+
+
+\section{Command Line Parameters}
+The {\tt main()} function may optionally possess special arguments which allow parameters
+to be passed to this function from the operating system. There are two such arguments, which
+are conventionally called {\tt argc} and {\tt argv}. The former argument, {\tt argc}, is
+an integer which is set to the number of parameters passed to {\tt main()}, whereas
+the latter argument, {\tt argv}, is an array of pointers to character strings which
+contain these parameters. In order to pass one or more parameters to a C program
+when it is executed from the operating system, the parameters must follow
+the program name on the command line: {\em e.g.},
+{\small\begin{verbatim}
+% program-name  parameter_1  parameter_2  parameter_3 ... parameter_n
+\end{verbatim}}\noindent
+The program name will be stored in the first item in {\tt argv}, followed by
+each of the parameters. Hence, if the program name is followed by {\tt n} parameters
+there will be {\tt n + 1} entries in {\tt argv}, ranging from {\tt argv[0]} to
+{\tt argv[n]}. Furthermore, {\tt argc} will be automatically set equal to  {\tt n + 1}. 
+
+The program listed below is a simple illustration of the use of command line
+parameters: it simply echoes all of the parameters passed to it.
+{\small\begin{verbatim}
+/* repeat.c */
+/*
+  Program to read and echo data from command line
+*/
+
+int main(int argc, char *argv[])
+{
+  int i;
+
+  for (i = 1; i < argc; i++) printf("%s ", argv[i]);
+  printf("\n");
+
+  return 0;
+}
+\end{verbatim}}\noindent
+Assuming that the executable is called {\tt repeat}, the typical output from this
+program is as follows:
+{\small\begin{verbatim}
+% repeat The quick brown fox jumped over the lazy hounds
+The quick brown fox jumped over the lazy hounds
+%
+\end{verbatim}}\noindent
+
+Suppose that one or more of the parameters passed to a given program are {\em numbers}.
+As we have seen, these numbers are actually passed as character strings.
+Hence, before they can be employed in calculations, they must be
+converted into either type {\tt int} or type {\tt double}. This can be
+achieved via the use of the functions {\tt atoi()} and {\tt atof()} (the
+appropriate header file for these functions is {\tt stdlib.h}). Thus,
+{\tt int atoi(char *ptr)} converts a string pointed to by {\tt ptr} into an
+{\tt int}, whereas {\tt double atof(char *ptr)} converts a string pointed to by {\tt ptr} into an
+{\tt double}. The program listed below illustrates the use of the {\tt atof()} function:
+it reads in a number passed as a command line parameter, interprets it as a temperature in
+degrees Fahrenheit, converts it to degrees Celsius, and then prints out the result.
+{\small\begin{verbatim}
+/* ftoc.c */
+/*
+  Program to convert temperature in Fahrenheit input
+  on command line to temperature in Celsius
+*/
+
+#include <stdlib.h>
+#include <stdio.h>
+
+int main(int argc, char *argv[])
+{
+  double deg_f, deg_c;
+
+  /* If no parameter passed to program print error
+     message and exit */
+  if (argc < 2)
+    {
+      printf("Usage: ftoc temperature\n");
+      exit(1); 
+    }
+
+  /* Convert first command line parameter to double */
+  deg_f = atof(argv[1]); 
+  /* Convert from Fahrenheit to Celsius */
+  deg_c = (5. / 9.) * (deg_f - 32.);
+
+  printf("%f degrees Fahrenheit equals %f degrees Celsius\n", 
+         deg_f, deg_c);
+
+  return 0;
+}
+\end{verbatim}}\noindent
+Assuming that the executable is called {\tt ftoc}, the typical output from this
+program is as follows:
+{\small\begin{verbatim}
+% ftoc 98
+98.000000 degrees Fahrenheit equals 36.666667 degrees Celsius
+%
+\end{verbatim}}\noindent
+
+\section{Timing}
+The header file {\tt time.h} defines a number of library functions which can be
+used to assess how much CPU time a C program consumes during execution. The simplest
+such function is called {\tt clock()}. A call to this function, with no argument,
+will return the amount of CPU time used so far by the calling program. The time
+is returned in a special data type, \verb{clock_t{, defined in {\tt time.h}. 
+This
+time must be divided by \verb{CLOCKS_PER_SEC{, also defined in {\tt time.h}, in order
+to covert it into seconds. The ability to measure how much CPU time a given
+code consumes is useful in scientific programming: {\em e.g.}, because it allows the effectiveness
+of the various available compiler optimization flags to be determined. Optimization
+usually (but not always!) speeds up the execution of a program.
+However, over aggressive
+optimization  can
+often slow a program down again.
+
+The program listed below illustrates the
+simple use of the {\tt clock()} function. The program compares the CPU
+time required to raise a {\tt double} to the fourth power via a direct calculation
+and via a call to the {\tt pow()} function. Actually, both operations are performed
+a million times and the elapsed CPU time is then divided by a million. 
+{\small\begin{verbatim}
+/* timing.c */
+/* 
+  Program to test operation of clock() function
+*/
+
+#include <time.h>
+#include <math.h>
+#define N_LOOP 1000000
+
+int main()
+{
+  int i;
+  double a = 11234567890123456.0, b;
+  clock_t time_1, time_2;
+
+  time_1 = clock();
+  for (i = 0; i < N_LOOP; i++) b = a * a * a * a;
+  time_2 = clock();
+  printf ("CPU time needed to evaluate a*a*a*a:    %f microsecs\n",
+          (double) (time_2 - time_1) / (double) CLOCKS_PER_SEC);
+
+  time_1 = clock();
+  for (i = 0; i < N_LOOP; i++) b = pow(a, 4.);
+  time_2 = clock();
+  printf ("CPU time needed to evaluate pow(a, 4.): %f microsecs\n",
+          (double) (time_2 - time_1) / (double) CLOCKS_PER_SEC);
+
+  return 0;
+}
+\end{verbatim}}\noindent
+The typical output from this program is as follows:
+{\small\begin{verbatim} 
+CPU time needed to evaluate a*a*a*a:    0.190000 microsecs
+CPU time needed to evaluate pow(a, 4.): 1.150000 microsecs
+%
+\end{verbatim}}\noindent
+Clearly, evaluating a fourth power using the {\tt pow()} function is a
+lot more expensive than the direct calculation. Hence, as has already
+been mentioned, the {\tt pow()} function should {\em  not} be used to raise
+floating point quantities to small integer powers.
+
+\section{Random Numbers}
+A large class of scientific calculations ({\em e.g.}, so-called Monte Carlo
+calculations) require the use of random variables.   A call to the
+{\tt rand()} function (header file {\tt stdlib.h}), with no arguments, returns a fairly good approximation to
+a random integer in the range {\tt 0} to \verb{RAND_MAX{ (defined in {\tt stdlib.h}). The
+{\tt srand()} function sets its argument, which is of type {\tt int}, as the
+seed for a new sequence of numbers to be returned by {\tt rand()}. These
+sequences are {\em repeatable}\/ by calling {\tt srand()} with the same seed value.
+If no seed value is provided, the {\tt rand()} function is automatically 
+seeded with the value  {\tt 1}.     It is common practice in C programming to
+seed the random number generator with the number of seconds elapsed since
+00:00:00 UTC, January 1st, 1970. This number is returned, as an integer, via
+a call to the {\tt time (NULL)} function (header file: {\tt <time.h>}). Seeding
+the generator in this manner ensures that a different set of random numbers is
+generated automatically each time the program is run.
+
+The program listed below illustrates the use of the {\tt rand()} function to construct a
+pseudo-random variable, {\tt x}, which is uniformly distributed in the range {\tt 0} to {\tt 1}.
+The program calculates $10^7$ values of {\tt x}, and then evaluates the mean and
+variance of these values.
+{\small\begin{verbatim} 
+/* random.c */
+/*
+  Program to test operation of rand() function
+*/
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <time.h>
+#define N_MAX 10000000
+
+int main()
+{
+  int i, seed;
+  double sum_0, sum_1, mean, var, x;
+
+  /* Seed random number generator */
+  seed = time(NULL);
+  srand(seed);
+
+  /* Calculate mean and variance of x: random number uniformly
+     distributed in range 0 to 1 */
+  for (i = 1, sum_0 = 0., sum_1 = 0.; i <= N_MAX; i++)
+    {
+      x = (double) rand() / (double) RAND_MAX;
+
+      sum_0 += x;
+      sum_1 += (x - 0.5) * (x - 0.5);
+    }
+  mean = sum_0 / (double) N_MAX;
+  var = sum_1 / (double) N_MAX;
+
+  printf("mean(x) = %12.10f  var(x) = %12.10f\n", mean, var);
+
+  return 0;
+}
+\end{verbatim}}\noindent
+The typical output from this program is as follows:
+{\small\begin{verbatim} 
+mean(x) = 0.5000335261  var(x) = 0.0833193874    
+%
+\end{verbatim}}\noindent
+As is easily demonstrated, the theoretical mean and variance of {\tt x}
+are $1/2$ and $1/12$, respectively. It can be seen that the values returned
+by the program agree with these theoretical values to five decimal
+places, which is all that can be expected with only $10^7$ calls.
+
+
+\section{C++ Extensions to C}
+In this subsection, we shall briefly discuss some of the useful, non-object-orientated extensions
+to C introduced in the C++ language. Files containing source code which incorporates C++ elements should
+be distinguished from files containing plain C code via the extension {\tt .cpp}. 
+
+In C, all local variables within a function must be declared {\em  before}\/ the first executable statement. In
+C++, this restriction is relaxed: a local variable can be declared (almost) {\em anywhere}\/ in a function, provided
+that this declaration occurs prior to the variable's first use. The following code
+snippet illustrates the use of this new feature:
+{\small\begin{verbatim} 
+. . .
+for (int i = 0; i < MAX; i++)
+ {
+  . . .
+ }
+. . .
+\end{verbatim}}\noindent
+Observe that the index {\tt i} of the {\tt for} loop is now declared at the start of the loop, instead
+of at the start of the function containing the loop. This is far more convenient, and also makes the
+code easier to read (since we no longer have to skip back to the declarations at the start
+of the function to check that {\tt i} is an {\tt int}). 
+Note, however, that the variable {\tt i} is only defined over the extent of the loop ({\em i.e.},
+between the curly braces). Any attempt to reference {\tt i} outside the loop will result in a
+compilation error. In general, when a variable is declared in C++ its {\em scope}\/  
+({\em i.e.}, range of definition) extends from its declaration to the closing curly brace which
+terminates the current program block. Program blocks are functions, loops,  conditionally
+executed compound statements, {\em etc.}, and are  delineated by curly braces.
+There are a number of restrictions to this new method of variable declaration.
+ Variables {\em cannot}\/ be declared
+within conditional statements, in the second or third expressions of {\tt for} loops, or
+in function calls.
+
+In C, we have seen that  in order to pass an argument to a function in such a
+manner that changes made to this argument within the function are passed back to the
+calling routine, we must actually pass a {\em pointer} to the argument. This procedure, which is
+called passing by {\em reference}, 
+is illustrated in the code snippet listed below:
+{\small\begin{verbatim}
+. . .
+void square(double, double *);
+. . . 
+int main()
+{
+  . . .
+  double arg, res;
+  square(arg, &res);
+  . . .
+  return 0;
+}
+. . .
+void square(double x, double *y)
+{
+  *y = x * x;
+  return;
+}
+\end{verbatim}}\noindent
+Here, the second argument to {\tt square()} is returned to {\tt main()}  in modified form.
+This argument must, therefore, be passed as a pointer. Consequently, we must write \verb}&res}, rather that
+{\tt res}, when calling {\tt square()}, and we must refer to the argument as
+\verb}*y}, rather than {\tt y}, in the function itself. 
+After a while, all these ampersands and asterisks
+can become a little tedious! C++ introduces a new method of passing by reference which somewhat
+less involved. This new method is illustrated in the following:
+{\small\begin{verbatim}
+. . .
+void square(double, double &);
+. . . 
+int main()
+{
+  . . .
+  double arg, res;
+  square(arg, res);
+  . . .
+  return 0;
+}
+. . .
+void square(double x, double &y)
+{
+  y = x * x;
+  return;
+}
+\end{verbatim}}\noindent
+Here, the second argument to  {\tt square()} is again passed by reference. However, this is now indicated
+by prepending an ampersand to the variable name in the function declaration. A corresponding
+ampersand appears in the associated function prototype. Note that we do not need to
+explicitly pass a pointer to the second argument when calling {\tt square()} (this is done behind the
+scenes): {\em i.e.}, we write {\tt res}, rather than \verb{&res{, when calling {\tt square()}.
+ Likewise, we do not have to explicitly deference the argument in the
+function itself (this is also done behind the scenes): {\em i.e.}, we refer to the
+argument by its regular local name, {\tt y},  as opposed to \verb{*y{, within the function.
+
+
+Functions are used in C programs to avoid having to repeat the same block of code
+ in many different places in the source. The use of functions also renders a code easier to
+read and maintain. However, there is a price to pay for the convenience of functions.
+When a regular function is called in an executable, the program jumps to the block of memory in which the
+compiled function code is stored, and then jumps back to its original
+position in memory space when the function returns. Unfortunately, the large jumps in memory
+space associated with a function call take up a non-negligible amount of CPU time. 
+Indeed, the
+overhead associated with making function calls often discourages scientific programmers
+from writing small functions, even when it may be desirable to do so. C++ provides a
+way out of this dilemma, via the use of the new keyword {\tt inline}. An
+{\em inline function}\/ looks like a normal function when it is used, but is compiled
+in a different manner. Calling an inline function from several different locations in a
+code does not result in multiple calls to a single function. Instead, the code for the
+inline function is inserted into the program code by the compiler wherever the function is used.
+
+Inline functions are only useful for {\em small}\/ functions. The disadvantage of 
+inserting the code for a large function multiple times into the code for a
+typical program  easily outweighs
+the small gain in performance obtained by the elimination of standard function calls.
+The break-even point for inline functions is usually about {\em three}\/ executable lines.
+
+To inline a function, a programmer adds the keyword {\tt inline} at the
+start of the function's definition. For example:
+{\small\begin{verbatim}
+inline double square(double x)
+{
+  return x * x;
+}
+\end{verbatim}}\noindent
+
+Because the body of an inline function must be known before the
+compiler can insert it
+into the program code, wherever the function is used, we must define such a function prior
+to its first use---a prototype declaration is not enough. It is common practice to define inline
+functions at the same location in source code files that the prototypes for regular ({\em i.e.}, outline)
+functions are  placed.
+
+
+Variable size array declarations of the form
+{\small\begin{verbatim}
+void function(n) 
+{
+  int n;
+  double x[n];
+  . . .
+}
+\end{verbatim}}\noindent
+are {\em illegal}\/ in C, which is extremely inconvenient. In C++, such declarations
+are enabled via the use of the new  keywords {\tt new} and {\tt delete}.
+Thus, the C++ implementation of the above code snippet takes the form:
+{\small\begin{verbatim}
+void function(n) 
+{
+  . . .
+  int n;
+  double *x = new double[n];
+  . . .
+  x[i] = . . .
+  . . .
+  . . .
+  delete x[];
+  . . .
+}
+\end{verbatim}}\noindent
+Note that {\tt x} is actually declared as a pointer, rather than a standard array. The
+declaration {\tt new double[n]} reserves a memory block which is just large enough to store {\tt n} doubles,
+and then returns the address of the start of this block. The line
+{\tt delete x[]} frees up the block of memory associated with the array {\tt x} when
+it is no longer needed (note that this is not done automatically).
+Unfortunately, the {\tt new} and {\tt delete} keywords cannot
+be used to make variable size multi-dimensional arrays.
+
+\section{Complex Numbers}
+As we have already mentioned, the C language definition does not include
+complex arithmetic---presumably because the square root of minus one is not
+a concept which crops up very often in systems programming! Fortunately,
+this rather serious deficiency---at least, as far as the scientific programmer
+is concerned---is remedied in C++. The program listed below illustrates the
+use of the C++ complex class (header file {\tt complex.h}) to perform complex
+arithmetic using doubles:
+{\small\begin{verbatim}
+/* complex.cpp */
+/*
+  Program to test out C++ complex class 
+*/
+
+#include <complex.h>
+#include <stdio.h>
+
+/* Define complex double data type */
+typedef complex<double> dcomp; 
+
+int main()
+{
+  dcomp i, a, b, c, d, e, p, q, r; // Declare complex double variables
+  double x, y;
+
+  /* Set complex double variable equal to complex double constant */
+  i = dcomp (0., 1.); 
+  printf("\ni = (%6.4f, %6.4f)\n", i);
+
+  /* Test arithmetic operations with complex double variables */
+  a = i * i;
+  b = 1. / i;  
+  printf("\ni*i = (%6.4f, %6.4f)\n", a);
+  printf("1/i = (%6.4f, %6.4f)\n", b);
+
+  /* Test mathematical functions using complex double variables */
+  c = sqrt(i);
+  d = sin(i);
+  e = pow(i, 0.25); 
+  printf("\nsqrt(i) = (%6.4f, %6.4f)\n", c);
+  printf("sin(i) = (%6.4f, %6.4f)\n", d);
+  printf("i^0.25 = (%6.4f, %6.4f)\n", e);
+
+  /* Test complex operations */
+  p = conj(i);
+  q = real(i);
+  r = imag(i);
+  printf("\nconj(i) = (%6.4f, %6.4f)\n", p);
+  printf("real(i) = %6.4f\n", q);
+  printf("imag(i) = %6.4f\n", r);
+
+  return 0;
+}
+\end{verbatim}}\noindent
+The typical output from this program is as follows:
+{\small\begin{verbatim} 
+i = (0.0000, 1.0000)
+ 
+i*i = (-1.0000, 0.0000)
+1/i = (0.0000, -1.0000)
+ 
+sqrt(i) = (0.7071, 0.7071)
+sin(i) = (0.0000, 1.1752)
+i^0.25 = (0.9239, 0.3827)
+ 
+conj(i) = (0.0000, -1.0000)
+real(i) = 0.0000
+imag(i) = 1.0000
+%                              
+\end{verbatim}}\noindent
+The program first of all defines the complex double type {\tt dcomp}. Variables
+of this type are then declared, set equal to complex constants, employed in arithmetic
+expressions, used as the arguments of mathematical functions, {\em etc.}, in much
+the same manner that we would perform similar operations in C with variables
+of type {\tt double}. Note the special functions {\tt conj()}, {\tt real()},
+and {\tt imag()}, which take the complex conjugate of, find the real part of,
+and find the imaginary part of a complex variable, respectively.
+
+\section{Variable Size Multi-Dimensional Arrays}\label{blitz}
+Multi-dimensional arrays crop up in a wide variety of different applications
+in scientific programming.
+Moreover, it is very common for the sizes of the arrays employed in a 
+scientific code to vary from run to run,
+depending on the particular values of the input parameters. 
+For instance, in a standard fluid code the array sizes depend on the number of grid points, which, in turn,
+depends on the requested accuracy. Thus, a crucial test of the suitability of a programming language
+for scientific purposes is its ability to deal with variable size, multi-dimensional arrays in a
+convenient manner. Unfortunately, C fails this test rather badly, since variable
+size matrix declarations of the form
+{\small\begin{verbatim}
+void function(a, m, n) 
+{
+  int m, n;
+  double a[m][n];
+  . . .
+\end{verbatim}}\noindent
+are {\em illegal}\/ (unlike in FORTRAN 77, where variable size matrix declarations are
+perfectly acceptable). Indeed, this unfortunate (and quite unnecessary!) omission in the C
+language definition is often put forward as a reason why C should {\em not}\/ be used for scientific
+purposes. Fortunately, we can get around the absence of variable size multi-dimensional arrays
+in C by making use of a freely available C++ package called the Blitz++ library---see {\tt http://www.oonumerics.org/blitz/}.
+
+The program listed below illustrates the use of the Blitz++ library. The program adds together two matrices
+whose dimensions and elements are input by the user, and then prints out the result. 
+{\small\begin{verbatim}
+/* addmatrix.c */
+/*
+  Program to add two variable dimension matrices input by user
+*/
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <blitz/array.h>
+
+using namespace blitz;
+
+/* Function prototypes */
+void readin(Array<double,2>);
+void writeout(Array<double,2>);
+void addmatrices(Array<double,2>, Array<double,2>, Array<double,2>);
+
+int main() 
+{
+
+  int n, m;
+  
+  /* Input number of rows and columns */
+  printf("\nPlease input number of rows, n, and number of columns, m: ");
+  scanf("%d %d", &n, &m);
+
+  /* Check that n, m are positive integers */
+  if (n <= 0 || m <= 0) 
+    {
+      printf("\nError: invalid values for n and/or m\n");
+      exit(1);
+    }
+
+  /* Array declarations */
+  Array<double,2> A(n, m), B(n, m), C(n, m);
+     
+  /* Read in elements of A, row by row */
+  printf("\nReading in elements of A:\n");
+  readin(A);
+
+  /* Read in elements of B, row by row */
+  printf("\nReading in elements of B:\n");
+  readin(B);
+
+  /* Write out elements of A, row by row */
+  printf("\nWriting out elements of A:\n");
+  writeout(A);
+
+  /* Write out elements of B, row by row */
+  printf("\n\nWriting out elements of B:\n");
+  writeout(B);
+
+  /* Add matrices A and B */
+  addmatrices(A, B, C);
+
+  /* Write out matrix C = A + B, row by row */
+  printf("\n\nWriting out elements of C = A + B:\n");
+  writeout(C);
+  printf("\n");
+
+  return 0;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+/*
+  Read in elements of matrix M, row by row
+*/  
+
+void readin(Array<double,2> M) 
+{
+  int n = M.extent(0);
+  int m = M.extent(1);
+
+  for (int i = 0; i < n; i++) 
+    {
+      printf("\nRow %d: ", i + 1);
+      for (int j = 0; j < m; j++) scanf("%lf", &M(i, j)); 
+    }
+  return;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  
+/*
+  Write out elements of matrix M, row by row
+*/  
+
+void writeout(Array<double,2> M) 
+{ 
+  int n = M.extent(0);
+  int m = M.extent(1);
+
+  for (int i = 0; i < n; i++)
+    {
+      printf("\nRow %d: ", i + 1);
+      for (int j = 0; j < m; j++) printf("%7.2f ", M(i, j)); 
+    }
+  return;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ 
+/*
+    Add matrices M and N and store result in matrix P
+*/
+
+void addmatrices(Array<double,2> M, Array<double,2> N, Array<double,2> P) 
+{ 
+  int n = M.extent(0);
+  int m = M.extent(1);
+  
+  for (int i = 0; i < n; i++) 
+    for (int j = 0; j < m; j++) 
+      P(i, j) = M(i, j) + N(i, j); 
+
+   return;
+}
+\end{verbatim}}\noindent
+Typical output from the program looks like
+{\small\begin{verbatim}
+
+Please input number of rows, n, and number of columns, m: 3 3
+
+Reading in elements of A:
+
+Row 1: 1 4 5
+
+Row 2: 6 7 8
+
+Row 3: 3 6 0
+
+Reading in elements of B:
+
+Row 1: 1 6 0
+
+Row 2: 4 7 8
+
+Row 3: 4 8 8
+
+Writing out elements of A:
+
+Row 1:    1.00    4.00    5.00 
+Row 2:    6.00    7.00    8.00 
+Row 3:    3.00    6.00    0.00 
+
+Writing out elements of B:
+
+Row 1:    1.00    6.00    0.00 
+Row 2:    4.00    7.00    8.00 
+Row 3:    4.00    8.00    8.00 
+
+Writing out elements of C = A + B:
+
+Row 1:    2.00   10.00    5.00 
+Row 2:   10.00   14.00   16.00 
+Row 3:    7.00   14.00    8.00 
+
+\end{verbatim}}\noindent
+The header file for the Blitz++ library is called {\tt blitz/array.h}. Moreover, any program file which makes use of
+Blitz++ must include the cryptic line {\tt using namespace blitz;} before the first call, otherwise compilation
+errors will ensue. The declaration {\tt Array<double,2> A(n, m)} declares a two-dimensional {\tt n}
+by {\tt m} array of doubles.
+The generalization to an array of integers, or a higher dimension array, is fairly obvious.
+Note that the {\tt i}, {\tt j} element of matrix {\tt A} is refered to simply as {\tt A(i,j)}.
+ The
+function call {\tt M.extent(0)} returns the size of array {\tt M} in its first dimension. Likewise,
+{\tt M.extent(1)} returns the size of array {\tt M} in its second dimension, {\em etc.} More details of the operation
+of Blitz++ can be found by reading the extensive documentation which accompanies this library.
+Unfortunately, the Blitz++ library slows down compilation considerably since it makes use of
+some very advanced templating features of the C++ language. 
+
+\section{The CAM Graphics Class}
+There are a myriad of useful, prewritten C++ classes which are freely available on the web---for
+more details see {\tt http://www.trumphurst.com/cpplibsx.html}. In this Subsection,
+we shall discuss just one of these---namely, the {\em CAM graphics class},\footnote{
+The CAM graphics class is copyrighted to its author,  Prof.\ Chris Anderson, Department
+of Mathematics, UCLA, 1998.}  whose
+purpose is to enable a C++ program to generate
+simple line plots. This class is freely available from the following URL:
+{\tt http://www.math.ucla.edu/\-\verb{~{anderson/CAMclass/CAMClass.html}
+
+	The CAM graphics class actually generates a PostScript\footnote{PostScript
+is a registered trademark of Adobe Systems Incorporated.}  file. 
+ Postscript is a programming language that describes the appearance of a printed page. 
+It was developed by Adobe in 1985, and has become an industry standard for printing and
+ imaging. All major printer manufacturers make printers that can interpret PostScript.
+ A PostScript file is conventionally
+  identified via a {\tt .ps} suffix. The schematic code listed below illustrates the
+basic use of the CAM graphics class:
+{\small\begin{verbatim}
+. . .
+#include <gprocess.h> // Header file for CAM graphic class
+. . .
+CAMgraphicsProcess Gprocess;                 // declare a graphics process
+CAMpostScriptDriver Pdriver("filename.ps");  // declare a PostScript driver
+Gprocess.attachDriver(Pdriver);              // attach driver to process
+. . .
+Gprocess.frame();                            // "frame" the first plot
+. . .
+Gprocess.frame();                            // "frame" the second plot
+. . .
+. . .  
+Gprocess.frame();                            // "frame" the last plot
+Gprocess.detachDriver();                     // detach the driver
+. . .
+\end{verbatim}}\noindent
+The header file for the class is called {\tt gprocess.h}. The procedure for
+generating a plot is to first declare a graphics process, then declare a
+PostScript driver and attach this to a PostScript file---{\tt filename.ps}, in the
+above example---and, finally, attach this driver to the process. A PostScript
+file can contain multiple pictures, or {\em frames}. Each frame is terminated
+by a call to {\tt Gprocess.frame()}. Finally, the driver is detached, which has the
+effect of closing the PostScript file. 
+
+The program listed below uses the CAM graphics class to plot the curve $y=\sin^2 x$
+for $x$ in the range $-2\pi$ to $2\pi$. 
+{\small\begin{verbatim}
+/* camgraph1.cpp */
+/*
+  Illustration of use of CAM graphics class to create simple line plot
+
+  Program plots y = sin^2 x versus x in range -2 PI to +2 PI
+
+  Program adapted from gpsmp1.cpp by Chris Anderson, UCLA 1996
+*/
+
+#include <gprocess.h>
+#include <math.h>
+#include <stdlib.h>
+
+double func(double);
+
+int main()
+{
+  int N_points = 400;
+  double x_start = -2. * M_PI;                
+  double x_end = 2. * M_PI; 
+  double delta_x = (x_end - x_start) / ((double) N_points - 1.);
+
+  double *x = new double[N_points];  
+  double *y = new double[N_points];
+
+  for (int i = 0; i < N_points; i++)
+    {
+      x[i] = x_start + (double) i * delta_x;
+      y[i] = func(x[i]);
+      x[i] /= M_PI;
+    }
+
+  { // This brace used to limit scope of Gprocess
+    CAMgraphicsProcess Gprocess;                // declare a graphics process
+    CAMpostScriptDriver Pdriver("graph1.ps");   // declare a PostScript driver
+    Gprocess.attachDriver(Pdriver);             // attach driver to process
+
+    Gprocess.setAxisRange(-2., 2., -2., 2.);    // set plotting ranges
+    Gprocess.title("y = sin(x*x)");             // label the plot
+    Gprocess.labelX("x / PI");
+    Gprocess.labelY("y");
+
+    Gprocess.plot(x, y, N_points);              // do the plotting
+
+    Gprocess.frame();                           // "frame" the plot
+
+    Gprocess.detachDriver();                    // detach the driver
+  } // This brace calls the destructor for Gprocess:
+    // without it the system() call would hang up
+
+  delete[] x;	           
+  delete[] y;
+
+  system("gv graph1.ps");  // display plot on screen         
+
+  return 0;
+}
+
+double func(double x)
+{ 
+  return sin(x*x);
+}
+\end{verbatim}}\noindent
+The command {\tt Gprocess.plot(x, y, n)} plots the \verb{n{ values of
+vector {\tt y} against the \verb{n{ values of vector {\tt x} as a solid curve.
+The command {\tt Gprocess.set\-Axis\-Range\-(x\verb{_{low, x\verb{_{high, y\verb{_{low, y\verb{_{high)} sets the
+range of plotting. Finally, the commands {\tt Gprocess.\-title("title")},  
+{\tt Gprocess.\-labelX("x\verb{_{label")},
+and {\tt Gprocess.\-labelY\-("y\verb{_{label")} label the plot, the $x$-axis, and the $y$-axis, respectively.
+Incidentally, the UNIX function call {\tt system("gv graph1.ps")} is used to pass the command
+{\tt gv graph1.ps} to the operating system. On execution, this command displays
+the contents of {\tt graph1.ps} on the screen.
+The graph written in the file {\tt graph1.ps} is shown in Fig~\ref{xxx}
+
+\begin{figure}[h]
+\epsfysize=2.5in
+\centerline{\epsffile{Chapter02/graph1.ps}}
+\caption{\em An example plot generated by the CAM graphics class.}\label{xxx}
+\end{figure}
+
+The program shown below illustrates some of the more advanced features of the CAM graphics
+class:
+{\small\begin{verbatim}
+/* camgraph2.cpp */
+/*
+  Illustration of use of CAMgraphics class to create more advanced line plots
+
+  Program plots three trigonometric functions versus x in range 
+   -2 PI to +2 PI using different plot styles and different
+   line styles
+
+  Program adapted from gpsmp2.cpp by Chris Anderson, UCLA 1996
+*/
+
+#include <gprocess.h>
+#include <math.h>
+#include <stdlib.h>
+
+double fun1(double);
+double fun2(double);
+double fun3(double);
+
+int main()
+{
+  int N_points = 100;
+  double x_start = -2. * M_PI;                
+  double x_end = 2. * M_PI; 
+  double delta_x = (x_end - x_start) / ((double) N_points - 1.);
+  
+  double *x  = new double[N_points];
+  double *y1 = new double[N_points];
+  double *y2 = new double[N_points];
+  double *y3 = new double[N_points];
+
+  for (int i = 0; i < N_points; i++)
+    {
+      x[i] = x_start + (double) i * delta_x;
+      y1[i] = fun1(x[i]);
+      y2[i] = fun2(x[i]);
+      y3[i] = fun3(x[i]);
+      x[i] /= M_PI;
+    }
+
+  {
+    CAMgraphicsProcess Gprocess;              // declare a graphics process
+    CAMpostScriptDriver Pdriver("graph2.ps"); // declare a PostScript driver
+    Gprocess.attachDriver(Pdriver);           // attach driver to process
+    
+    /* First frame;  using different plot "styles" */
+    Gprocess.setAxisRange(-2., 2., -2., 2.);            // set plotting ranges
+    Gprocess.title("Plots Using Different Plot Styles");// label the plot
+    Gprocess.labelX("x / PI");
+    Gprocess.labelY("y");
+
+    Gprocess.plot(x, y1, N_points);              // solid line (default)
+    Gprocess.plot(x, y2, N_points, '+');         // + markers
+    Gprocess.plot(x, y3, N_points, '+', 2);      // + markers and solid line
+
+    Gprocess.frame();                            // "frame" the plot
+
+    /* Second frame; using different plot line "styles" */
+    Gprocess.setAxisRange(-2., 2., -2., 2.);            // set plotting ranges
+    Gprocess.title("Plots Using Different Line Styles");// label the plot
+    Gprocess.labelX("x / PI");
+    Gprocess.labelY("y");
+
+    Gprocess.plot(x, y1, N_points);         // solid line (default)
+    Gprocess.setPlotDashPattern(1);
+    Gprocess.plot(x, y2, N_points);         // dashed line
+    Gprocess.setPlotDashPattern(4);
+    Gprocess.plot(x, y3, N_points);         // dashed-dot line
+
+    Gprocess.frame();                       // "frame" the plot
+
+    Gprocess.detachDriver();                // detach the driver
+  }
+
+  delete[] x;
+  delete[] y1;
+  delete[] y2;
+  delete[] y3;
+
+  system("gv graph2.ps"); // display plots on screen     
+  
+  return 0;
+}
+
+double fun1(double x)
+{ 
+  return sin(x);
+}
+
+double fun2(double x)
+{ 
+  return cos(x);
+}
+
+double fun3(double x)
+{ 
+  return cos(2.*x);
+}
+\end{verbatim}}\noindent
+The command {\tt Gprocess.plot(x, y, n, '+')} plots the \verb{n{ values of
+vector {\tt y} against the \verb{n{ values of vector {\tt x} as a set of points,
+each indicated by a {\tt '+'} character. 
+The command {\tt Gprocess.plot(x, y, n, '+', 2)} does the same, but also
+connects the points with a solid line. The fourth argument of this command is
+an integer code which determines the plot style. The various
+options are as follows: {\tt 0} - curve; {\tt 1} - points; {\tt 2} - curve and
+points.  The command {\tt Gprocess.setPlot\-Dash\-Pattern(n)} sets the line style.
+The argument is again an integer code. The various options are:
+{\tt 0} - solid; {\tt 1} - dash; {\tt 2} - double-dash; {\tt 4} - dash-dot;
+{\tt 5} - dash-double-dot; {\tt 6} - dots.
+
+ The graphs written in the first and second frames of  {\tt graph2.ps} are shown in 
+Figs.~\ref{fg2a} and \ref{fg2b}, respectively.
+
+\begin{figure}
+\epsfysize=2.5in
+\centerline{\epsffile{Chapter02/graph2a.eps}}
+\caption{\em An example plot generated by the CAM graphics class.}\label{fg2a}
+\end{figure}
+
+
+\begin{figure}
+\epsfysize=2.5in
+\centerline{\epsffile{Chapter02/graph2b.eps}}
+\caption{\em An example plot generated by the CAM graphics class.}\label{fg2b}
+\end{figure}

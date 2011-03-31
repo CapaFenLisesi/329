@@ -1,0 +1,1066 @@
+\chapter{Poisson's Equation}
+\section{Introduction}
+In this section, we shall discuss some simple numerical techniques for
+solving Poisson's equation:
+\begin{equation}
+\nabla^2 u({\bf r}) = v({\bf r}).
+\end{equation}
+Here, $u({\bf r})$ is usually some sort of potential, whereas $v({\bf r})$ is a
+source term.
+The solution to the above equation is generally required in some simply-connected volume $V$ bounded by a
+closed surface $S$. There are two main types of boundary conditions to Poisson's equation.
+In so-called {\em Dirichlet} boundary conditions, the potential $u$ is specified on the bounding
+surface $S$. In so-called {\em Neumann} boundary conditions, the normal gradient of the
+potential $\nabla u\cdot d{\bf S}$ is specified on the bounding surface.
+
+Poisson's equation is of particular importance in electrostatics and Newtonian gravity.
+In electrostatics, we can write the electric field ${\bf E}$ in terms of an electric
+potential $\phi$:
+\begin{equation}
+{\bf E} = - \nabla\,\phi.
+\end{equation}
+The potential itself satisfies Poisson's equation:
+\begin{equation}\label{estat}
+\nabla^2 \phi = - \frac{\rho}{\epsilon_0},
+\end{equation}
+where $\rho({\bf r})$ is the charge density, and $\epsilon_0$ the permittivity of
+free-space. In Newtonian gravity, we can write the force ${\bf f}$ exerted on a
+unit test mass in terms of a gravitational potential $\phi$:
+\begin{equation}
+{\bf f} = - \nabla\,\phi.
+\end{equation}
+The potential satisfies Poisson's equation:
+\begin{equation}
+\nabla^2 \phi = 4\pi^2\,G\,\rho,
+\end{equation}
+where  $\rho({\bf r})$ is the mass density, and $G$ the universal gravitational
+constant.
+
+\section{1-D Problem with Dirichlet Boundary Conditions}\label{pois1d}
+As a simple test case, let us consider the solution of Poisson's equation
+in one dimension. Suppose that
+\begin{equation}
+\frac{d^2 u(x)}{dx^2} = v(x),
+\end{equation}
+for $x_l\leq x\leq x_h$, subject to the Dirichlet boundary conditions
+$u(x_l) = u_l$ and $u(x_h) = u_h$. 
+
+	As a first step, we divide the domain $x_l\leq x\leq x_h$ into  equal
+segments whose vertices are located at the grid-points
+\begin{equation}\label{e57}
+x_i = x_l + \frac{i\,(x_h-x_l)}{N+1},
+\end{equation}
+for $i=1,N$. The boundaries, $x_l$ and $x_h$,  correspond to $i=0$ and $i=N+1$,
+respectively.
+
+Next, we  discretize the differential term $d^2u/dx^2$ on the grid-points. The most
+straightforward discretization is
+\begin{equation}\label{e58}
+\frac{d^2u(x_i)}{dx^2} = \frac{u_{i-1} - 2\,u_i+u_{i+1}}{(\delta x)^2} + O(\delta x)^2.
+\end{equation}
+Here, $\delta x = (x_h-x_l)/(N+1)$, and $u_i \equiv u(x_i)$. This type
+of discretization is termed a {\em second-order}, {\em central difference} scheme. 
+It is
+``second-order'' because the truncation error is $O(\delta x)^2$, as can
+ easily be demonstrated via Taylor expansion. Of course, an $n$th order scheme
+would have a truncation error which is $O(\delta x)^n$.
+It is a ``central difference'' scheme because it is symmetric about the central
+grid-point, $x_i$. 
+Our discretized version of Poisson's equation takes the form
+\begin{equation}
+u_{i-1} -2\,u_i + u_{i+1} = v_i\,(\delta x)^2,
+\end{equation}
+for $i=1,N$, where $v_i\equiv v(x_i)$. Furthermore, $u_0=u_l$ and $u_{N+1} = u_h$. 
+
+It is helpful to regard the above set of discretized equations as a matrix equation.
+Let ${\bf u} = (u_1,\, u_2,\, \cdots,\, u_N)$ be the vector of the $u$-values,
+and let 
+\begin{equation}\label{e510}
+{\bf w} = [v_1\,(\delta x)^2 - u_l,\, v_2\,(\delta x)^2,\, v_3\,(\delta x)^2,\,\cdots,\, v_{N-1}\, (\delta x)^2,\,
+v_N\,(\delta x)^2 - u_h]
+\end{equation}
+ be the vector of the source terms. The discretized equations can be written
+as:
+\begin{equation}\label{e511}
+{\bf M}\,{\bf u} = {\bf w}.
+\end{equation}
+The matrix ${\bf M}$ takes the form
+\begin{equation}
+{\bf M} = \left(\begin{array}{rrrrrr}
+-2 &  1 & 0  &  0 &  0 &  0 \\
+ 1 & -2 & 1  &  0 &  0 &  0 \\
+ 0 &  1 & -2 &  1 &  0 &  0 \\
+ 0 &  0 &  1 & -2 &  1 &  0 \\
+ 0 &  0 &  0 &  1 & -2 &  1 \\
+ 0 &  0 &  0 &  0 &  1 & -2 \\ 
+\end{array}
+ \right)
+\end{equation}
+for $N=6$. The generalization to other $N$ values is fairly obvious.
+Matrix ${\bf M}$ is termed a {\em tridiagonal} matrix, since only those elements which lie on
+the three leading diagonals are non-zero.
+
+The formal solution to Eq.~(\ref{e511}) is
+\begin{equation}
+{\bf u} = {\bf M}^{-1}\,{\bf w},
+\end{equation}
+where ${\bf M}^{-1}$ is the inverse matrix to ${\bf M}$. Unfortunately, the most efficient
+general purpose algorithm for inverting an $N\times N$ matrix---namely, Gauss-Jordan elimination
+with partial pivoting---requires $O(N^3)$ arithmetic operations. It is fairly clear that this
+is a disastrous scaling for finite-difference solutions of Poisson's equation.
+Every time we doubled the resolution ({\em i.e.}, doubled the number of grid-points) the
+required cpu time would increase by a factor of about eight. Consequently, adding a second dimension (which
+effectively requires the number of grid-points to be squared) would  be prohibitively expensive
+in terms of cpu time. Fortunately, there is a well-known trick for inverting an $N\times N$ 
+{\em tridiagonal}
+matrix which only requires $O(N)$ arithmetic operations.
+
+Consider a general $N\times N$ tridiagonal matrix equation ${\bf M}\,{\bf u} = {\bf w}$. 
+Let ${\bf a}$, ${\bf b}$, and ${\bf c}$ be the vectors of the left, center and right
+diagonal elements of the matrix, respectively
+ Note that $a_1$ and $c_N$ are undefined, and can be conveniently
+set to zero. Our matrix equation can now be written
+\begin{equation}\label{e515}
+a_i\,u_{i-1}+ b_i\,u_i + c_i\,u_{i+1} = w_i,
+\end{equation}
+for $i=1,N$.
+Let us search for a solution of the form
+\begin{equation}\label{e517}
+u_{i+1} = x_i\,u_i + y_i.
+\end{equation}
+Substitution into Eq.~(\ref{e515}) yields
+\begin{equation}
+a_i\,u_{i-1} + b_i\,u_i+c_i\,(x_i\,u_i+y_i) = w_i,
+\end{equation}
+which can be rearranged to give
+\begin{equation}
+u_i = - \frac{a_i\,u_{i-1}}{b_i+c_i\,x_i} + \frac{w_i-c_i\,y_i}{b_i+c_i\,x_i}.
+\end{equation}
+However, if Eq.~(\ref{e517}) is general then we can write $u_i = x_{i-1}\,u_{i-1} + y_{i-1}$.
+Comparison with the previous equation yields
+\begin{equation}\label{e520}
+x_{i-1} = - \frac{a_i}{b_i+c_i\,x_i},
+\end{equation}
+and
+\begin{equation}\label{e521}
+y_{i-1} = \frac{w_i-c_i\,y_i}{b_i+c_i\,x_i}.
+\end{equation}
+We can now solve our tridiagonal matrix equation in two stages. In the first stage, we scan
+{\em up} the leading diagonal from $i=N$ to $1$ using Eqs.~(\ref{e520}) and (\ref{e521}). Thus,
+\begin{equation}
+x_{N-1} = -\frac{a_N}{b_N},\mbox{\hspace{1cm}}y_{N-1} = \frac{w_N}{b_N},
+\end{equation}
+since $c_N=0$. Furthermore,
+\begin{equation}
+x_i = - \frac{a_{i+1}}{b_{i+1}+c_{i+1}\,x_{i+1}},\mbox{\hspace{1cm}}y_i =  
+\frac{w_{i+1}-c_{i+1}\,y_{i+1}}{b_{i+1}+c_{i+1}\,x_{i+1}}
+\end{equation}
+for $i=N-2, 1$. Finally,
+\begin{equation}
+x_0 = 0,\mbox{\hspace{1cm}}y_0 = \frac{w_1-c_1\,y_1}{b_1+c_1\,x_1},
+\end{equation}
+since $a_1=0$. We have now defined all of the $x_i$ and $y_i$. In the second stage,
+we scan {\em down} the leading diagonal from $i=0$ to $N-1$ using Eq.~(\ref{e517}).
+Thus,
+\begin{equation}
+u_1 = y_0,
+\end{equation}
+since $x_0=0$, and
+\begin{equation}
+u_{i+1} = x_i\,u_i + y_i
+\end{equation}
+for $i=1, N-1$. We have now inverted our tridiagonal matrix equation using $O(N)$ arithmetic
+operations.
+
+Clearly, we can use the above algorithm to invert Eq.~(\ref{e511}), with the source terms
+specified in Eq.~(\ref{e510}), and the diagonals of matrix ${\bf M}$ given by
+$a_i=1$ for $i=2,N$, plus $b_i = -2$ for $i=1,N$, and $c_i = 1$ for $i=1, N-1$. 
+
+\section{An Example Tridiagonal Matrix Solving Routine}
+Listed below is an example tridiagonal matrix solving routine
+which utilizes the {\tt Blitz++} library (see Sect.~\ref{blitz}).
+{\small\begin{verbatim}
+// Tridiagonal.cpp
+
+// Function to invert tridiagonal matrix equation.
+// Left, centre, and right diagonal elements of matrix
+// stored in arrays a, b, c, respectively.
+// Right-hand side stored in array w.
+// Solution written to array u.
+
+// Matrix is NxN. Arrays a, b, c, w, u assumed to be of extent N+2,
+// with redundant 0 and N+1 elements.
+
+#include <blitz/array.h>
+
+using namespace blitz;
+
+void Tridiagonal (Array<double,1> a, Array<double,1> b, Array<double,1> c, 
+                  Array<double,1> w, Array<double,1>& u)
+{
+  // Find N. Declare local arrays.	
+  int N = a.extent(0) - 2;
+  Array<double,1> x(N), y(N);
+
+  // Scan up diagonal from i = N to 1
+  x(N-1) = - a(N) / b(N);
+  y(N-1) = w(N) / b(N);
+  for (int i = N-2; i > 0; i--)
+    {
+      x(i) = - a(i+1) / (b(i+1) + c(i+1) * x(i+1));
+      y(i) = (w(i+1) - c(i+1) * y(i+1)) / (b(i+1) + c(i+1) * x(i+1));
+    }
+  x(0) = 0.;
+  y(0) = (w(1) - c(1) * y(1)) / (b(1) + c(1) * x(1));
+
+  // Scan down diagonal from i = 0 to N-1
+  u(1) = y(0);
+  for (int i = 1; i < N; i++)
+    u(i+1) = x(i) * u(i) + y(i);
+}
+\end{verbatim}}
+
+\section{1-D problem with Mixed Boundary Conditions}\label{tri}
+Previously, we solved Poisson's equation in one dimension subject
+to Dirichlet boundary conditions, which are the simplest
+conceivable boundary conditions. Let us now consider the following much more general
+set of boundary conditions:
+\begin{equation}\label{e527}
+\alpha_l\,u(x) + \beta_l\,\frac{du(x)}{dx} = \gamma_l,
+\end{equation}
+at $x=x_l$, and
+\begin{equation}\label{e528}
+\alpha_h \,u(x)+ \beta_h\,\frac{du(x)}{dx} = \gamma_h,
+\end{equation}
+at $x=x_h$. Here, $\alpha_l$, $\beta_l$, {\em etc.}, are known constants. The above
+boundary conditions are termed {\em mixed}, since they are a mixture of Dirichlet and
+Neumann boundary conditions.
+
+Using the previous notation, the discretized versions of Eq.~(\ref{e527}) and (\ref{e528}) are:
+\begin{eqnarray}\label{e529}
+\alpha_l\,u_0 + \beta_l\,\frac{u_1-u_0}{\delta x} &=& \gamma_l,\\[0.5ex]
+\alpha_h\,u_{N+1} + \beta_h\,\frac{u_{N+1}-u_N}{\delta x} &=& \gamma_h,\label{e530}
+\end{eqnarray}
+respectively.
+The above expressions can be rearranged to give
+\begin{eqnarray}\label{e531}
+u_0 &=& \frac{\gamma_l\,\delta x-\beta_l\,u_1}{\alpha_l\,\delta x -\beta_l},\\[0.5ex]
+u_{N+1} &=& \frac{\gamma_h\,\delta x + \beta_h\,u_N}{\alpha_h\,\delta x +\beta_h}.\label{e532}
+\end{eqnarray}
+
+Using Eqs.~(\ref{e58}), (\ref{e531}), and (\ref{e532}), the problem can be reduced to
+a tridiagonal matrix equation ${\bf M}\,{\bf u} = {\bf w}$, where the left, center, and
+right diagonals of ${\bf M}$ possess the elements $a_i = 1$ for $i=2,N$, with
+\begin{equation}
+b_1 = -2 - \frac{\beta_l}{\alpha_l\,\delta x-\beta_l},
+\end{equation}
+and $b_i=-2$ for $i=2,N-1$, plus
+\begin{equation}
+b_N = -2 + \frac{\beta_h}{\alpha_h\,\delta x+\beta_h},
+\end{equation}
+and $c_i = 1$ for $i=1,N-1$, respectively. The elements of the right-hand side
+are
+\begin{equation}
+w_1 = v_1\,(\delta x)^2 - \frac{\gamma_l\,\delta x}{\alpha_l\,\delta x-\beta_l},
+\end{equation}
+with $w_i = v_i\,(\delta x)^2$ for $i=2,N-1$, and
+\begin{equation}
+w_N = v_N\,(\delta x)^2 - \frac{\gamma_h\,\delta x}{\alpha_h\,\delta x+\beta_h}.
+\end{equation}
+Our tridiagonal matrix equation can be inverted using the algorithm discussed 
+previously.
+
+\section{An Example 1-D Poisson Solving Routine}\label{poisson1d}
+Listed below is an example 1-d Poisson solving routine
+which utilizes the previously listed tridiagonal matrix
+solver and the {\tt Blitz++} library (see Sect.~\ref{blitz}).
+{\small\begin{verbatim}
+// Poisson1D.cpp
+
+// Function to solve Poisson's equation in 1-d:
+
+//  d^2 u / dx^2 = v  for  xl <= x <= xh
+
+//  alpha_l u + beta_l du/dx = gamma_l  at x=xl
+
+//  alpha_h u + beta_h du/dx = gamma_h  at x=xh
+
+// Arrays u and v assumed to be of extent N+2.
+
+// Now, ith elements of arrays correspond to
+
+//  x_i = xl + i * dx    i=0,N+1
+
+// Here, dx = (xh - xl) / (N+1) is grid spacing.
+
+#include <blitz/array.h>
+
+using namespace blitz;
+
+void Tridiagonal (Array<double,1> a, Array<double,1> b, Array<double,1> c, 
+                  Array<double,1> w, Array<double,1>& u);
+
+void Poisson1D (Array<double,1>& u, Array<double,1> v,
+                double alpha_l, double beta_l, double gamma_l,
+                double alpha_h, double beta_h, double gamma_h,
+                double dx)
+{
+  // Find N. Declare local arrays.
+  int N = u.extent(0) - 2;
+  Array<double,1> a(N+2), b(N+2), c(N+2), w(N+2);
+
+  // Initialize tridiagonal matrix
+  for (int i = 2; i <= N; i++) a(i) = 1.;
+  for (int i = 1; i <= N; i++) b(i) = -2.;
+  b(1) -= beta_l / (alpha_l * dx - beta_l);
+  b(N) += beta_h / (alpha_h * dx + beta_h);
+  for (int i = 1; i <= N-1; i++) c(i) = 1.;
+
+  // Initialize right-hand side vector
+  for (int i = 1; i <= N; i++)
+      w(i) = v(i) * dx * dx;
+  w(1) -= gamma_l * dx / (alpha_l * dx - beta_l);
+  w(N) -= gamma_h * dx / (alpha_h * dx + beta_h);
+
+  // Invert tridiagonal matrix equation
+  Tridiagonal (a, b, c, w, u);
+
+  // Calculate i=0 and i=N+1 values
+  u(0) = (gamma_l * dx - beta_l * u(1)) /
+    (alpha_l * dx - beta_l);
+  u(N+1) = (gamma_h * dx + beta_h * u(N)) /
+    (alpha_h * dx + beta_h);
+}
+\end{verbatim}}
+
+\section{An Example Solution of Poisson's Equation in 1-D}
+Let us now solve Poisson's equation in one dimension, with mixed boundary conditions,
+using the finite difference technique discussed above. We  seek the
+solution of
+\begin{equation}
+\frac{d^2 u(x)}{dx^2} = v(x),
+\end{equation}
+in the region $0\leq x\leq 1$, with $v(x) = 1 - 2\,x^2$. The boundary conditions
+at $x_l=0$ and $x_h = 1$ take the mixed form specified in Eqs.~(\ref{e527}) and
+(\ref{e528}). Of course, we can solve this problem analytically. In fact,
+\begin{equation}
+u(x) = g + h\,x + \frac{x^2}{2} - \frac{x^4}{6},
+\end{equation}
+where
+\begin{eqnarray}
+g &=& \frac{\gamma_l\,(\alpha_h+\beta_h) - \beta_l\,[\gamma_h-(\alpha_h+\beta_h)/3]}
+{\alpha_l\,\alpha_h + \alpha_l\,\beta_h-\beta_l\,\alpha_h},\\[0.5ex]
+h &=& \frac{ \alpha_l\,[\gamma_h-(\alpha_h+\beta_h)/3]-\gamma_l\,\alpha_h}
+{\alpha_l\,\alpha_h + \alpha_l\,\beta_h-\beta_l\,\alpha_h}.
+\end{eqnarray}
+Figure~\ref{f5x1} shows a comparison between the analytic and finite difference
+solutions for $N=100$. It can be seen that the finite difference solution mirrors
+the analytic solution almost exactly.
+
+\begin{figure}
+\epsfysize=3in
+\centerline{\epsffile{Chapter05/p1d.eps}}
+\caption{\em Solution of Poisson's equation  in one dimension  with $v=1-2\,x^2$, $\alpha_l = 1$, $\beta_l=-1$,
+$\gamma_l=1$, $\alpha_h=1$, $\beta_h=1$, and $\gamma_h=1$. The dotted curve (obscured)
+shows the analytic solution, whereas the open triangles show the finite difference
+solution for $N=100$.  }\label{f5x1}
+\end{figure}
+
+\section{2-D problem with Dirichlet Boundary Conditions}\label{fftsine}
+ Let us consider the solution of Poisson's equation
+in two dimensions. Suppose that
+\begin{equation}\label{e541}
+\frac{\partial^2 u(x,y)}{\partial x^2}+\frac{\partial^2 u(x,y)}{\partial y^2} = v(x,y),
+\end{equation}
+for $x_l\leq x \leq x_h$, and $0\leq y \leq L$. By direct analogy
+with our previous method of solution in the 1-d case, we could discretize
+the above 2-d problem  using a second-order, central difference scheme in both
+the $x$- and $y$-directions. Unfortunately, such a discretization scheme yields a
+set of equations which {\em cannot} be reduced to a simple tridiagonal matrix equation.
+In fact, all of the efficient numerical algorithms for solving this type of problem are
+{\em iterative} in nature. For instance, the {\em Jacobi} method, the
+{\em Gauss-Seidel} method, the {\em successive over-relaxation} method, and the {\em multi-grid}
+method.\footnote{See {\em Numerical recipes in C: the
+art of scientific computing}, W.H.~Press, S.A.~Teukolsky, W.T.~Vettering, and
+B.R.~Flannery (Cambridge University Press, Cambridge, England, 1992), Sect.~19.5.}
+Regrettably, unless such iteration methods are extremely sophisticated ({\em e.g.}, the multi-grid method),
+ and, hence,
+beyond the scope of this course,
+ they tend to converge very poorly. In the following, 
+rather than discuss iterative methods which do not work
+very well, we shall instead discuss a non-iterative method which works effectively
+for a restricted set of problems. The method in question is termed a {\em spectral method}, since
+it involves expanding $u$ and $v$ as truncated Fourier series in the $y$-direction.
+
+Suppose that $u(x,y)$ satisfies mixed   boundary conditions in the $x$-direction: {\em i.e.},
+\begin{equation}\label{e527a}
+\alpha_l\,u(x,y) + \beta_l\,\frac{\partial u(x,y)}{\partial x} = \gamma_l(y),
+\end{equation}
+at $x=x_l$, and
+\begin{equation}\label{e528a}
+\alpha_h \,u(x,y)+ \beta_h\,\frac{\partial u(x,y)}{\partial x} = \gamma_h(y),
+\end{equation}
+at $x=x_h$. Here, $\alpha_l$, $\beta_l$, {\em etc.}, are known constants,
+whereas $\gamma_l$, $\gamma_h$ are known functions of $y$. 
+Furthermore, suppose that $u(x,y)$ satisfies the following simple Dirichlet boundary
+conditions in the $y$-direction:
+\begin{equation}\label{e5.44}
+u(x,0) = u(x,L) = 0.
+\end{equation}
+Note that, since $u(x,y)$ is a potential, and, hence, probably undetermined to an
+arbitrary additive constant, the above boundary conditions are equivalent to
+demanding that $u$ take the
+{\em same} constant value on both the upper and lower boundaries in the $y$-direction.
+
+Let us write $u(x,y)$ as a Fourier series in the $y$-direction:
+\begin{equation}\label{e545}
+u(x,y) = \sum_{j=0}^{\infty} U_j(x)\,\sin(j\,\pi\,y/L).
+\end{equation}
+Note that the above expression for $u$ automatically satisfies the boundary conditions
+in the $y$-direction. The $\sin(j\,\pi\,y/L)$ functions are {\em orthogonal}, and form a complete set, in
+the interval $y=0,L$. In fact,
+\begin{equation}
+\frac{2}{L}\int_0^L \sin(j\,\pi\,y/L)\,\sin(k\,\pi\,y/L)\,dy = \delta_{jk}.
+\end{equation}
+Thus, we can write the source term as
+\begin{equation}\label{e547}
+v(x,y) = \sum_{j=0}^{\infty} V_j(x)\,\sin(j\,\pi\,y/L),
+\end{equation}
+where
+\begin{equation}\label{ffta1}
+V_j(x) = \frac{2}{L} \int_0^L v(x,y)\,\sin(j\,\pi\,y/L)\,dy.
+\end{equation}
+Furthermore, the boundary conditions in the $x$-direction become
+\begin{equation}\label{e549}
+\alpha_l\,U_j(x) + \beta_l\,\frac{dU_j(x)}{dx} = \Gamma_{l\,j},
+\end{equation}
+at $x=x_l$, and
+\begin{equation}\label{e550}
+\alpha_h\,U_j(x)+ \beta_h\,\frac{dU_j(x)}{dx} = \Gamma_{h\,j},
+\end{equation}
+at $x=x_h$, where
+\begin{equation}\label{ffta2}
+\Gamma_{l\,j} = \frac{2}{L} \int_0^L \gamma_l(y)\,\sin(j\,\pi\,y/L)\,dy,
+\end{equation}
+{\em etc.}
+
+Substituting Eqs.~(\ref{e545}) and (\ref{e547}) into Eq.~(\ref{e541}), and equating
+the coefficients of the $\sin(j\,\pi\,y/L)$ (since these functions are orthogonal), we
+obtain
+\begin{equation}
+\frac{d^2 U_j(x)}{dx^2} - \frac{j^2\,\pi^2}{L^2}\,U_j(x) = V_j(x),
+\end{equation}
+for $j=0,\infty$. Now, we can discretize the problem in the $y$-direction by truncating our
+Fourier expansion: {\em i.e.}, by only solving the above equations for $j=0,J$, rather
+than $j=0,\infty$. This is essentially equivalent to discretization in the $y$-direction on the 
+equally-spaced grid-points
+$y_j=j\,L/J$.
+The problem is discretized in the $x$-direction by dividing the domain
+into equal segments, according to Eq.~(\ref{e57}), and approximating $d^2/dx^2$ via the
+second-order, central difference scheme specified in Eq.~(\ref{e58}). Thus, we obtain
+\begin{equation}\label{e5a}
+U_{i-1,j} - (2+j^2\,\kappa^2)\,U_{i,j} + U_{i+1,j} = V_{i,j}\,(\delta x)^2,
+\end{equation}
+for $i=1,N$ and $j=0,J$. Here, $U_{i,j} \equiv U_j(x_i)$, $V_{i,j} \equiv V_j(x_i)$, and
+$\kappa = \pi\,\delta x/L$. The
+boundary conditions (\ref{e549}) and (\ref{e550}) discretize to give:
+\begin{eqnarray}\label{e5b}
+U_{0,j}&=& \frac{\Gamma_{l\,j}\,\delta x-\beta_l\,U_{1,j}}{\alpha_l\,\delta x -\beta_l},\\[0.5ex]
+U_{N+1,j}&=& \frac{\Gamma_{h\,j}\,\delta x + \beta_h\,U_{N,j}}{\alpha_h\,\delta x +\beta_h},\label{e5c}
+\end{eqnarray}
+for $j=0,J$. Eqs.~(\ref{e5a}), (\ref{e5b}), and (\ref{e5c}) constitute a set of $J+1$
+{\em uncoupled} tridiagonal matrix equations (with one equation for each separate $j$ value).
+These equations can be inverted, using the algorithm discussed in Sect.~\ref{tri}, to
+give the $U_{i,j}$. Finally, the $u(x_i, y_j)$ values can be reconstructed from Eq.~(\ref{e545}).
+Hence, we have solved the problem.
+
+
+\section{2-d Problem with Neumann Boundary Conditions}\label{fftcos}
+Let us redo the above calculation, replacing the Dirichlet boundary conditions (\ref{e5.44})
+with the following simple Neumann boundary conditions:
+\begin{equation}
+\frac{\partial u(x,y=0)}{\partial y} = \frac{\partial u(x,y=L)}{\partial y} = 0.
+\end{equation}
+In this case, we can express $u(x,y)$ in the form
+\begin{equation}\label{e5x}
+u(x,y) = \sum_{j=0}^{\infty} U_j(x)\,\cos(j\,\pi\,y/L),
+\end{equation}
+which automatically satisfies the boundary conditions in the $y$-direction. Likewise,
+we can write the source term $v(x,y)$ as
+\begin{equation}
+v(x,y) = \sum_{j=0}^{\infty} V_j(x)\,\cos(j\,\pi\,y/L),
+\end{equation}
+where
+\begin{equation}\label{nb1}
+V_j(x) = \frac{2}{L} \int_0^L v(x,y)\,\cos(j\,\pi\,y/L)\,dy,
+\end{equation}
+since
+\begin{equation}
+\frac{2}{L}\int_0^L \cos(j\,\pi\,y/L)\,\cos(k\,\pi\,y/L)\,dy = \delta_{jk}.
+\end{equation}
+Finally, the boundary conditions in the $x$-direction become
+\begin{equation}
+\alpha_l\,U_j(x) + \beta_l\,\frac{dU_j(x)}{dx} = \Gamma_{l\,j},
+\end{equation}
+at $x=x_l$, and
+\begin{equation}
+\alpha_h \,U_j(x)+ \beta_h\,\frac{dU_j(x)}{dx} = \Gamma_{h\,j},
+\end{equation}
+at $x=x_h$, where
+\begin{equation}\label{nb2}
+\Gamma_{l\,j} = \frac{2}{L} \int_0^L \gamma_l(y)\,\cos(j\,\pi\,y/L)\,dy,
+\end{equation}
+{\em etc.} Note, however, that the factor in front of the integrals in Eqs.~(\ref{nb1})
+and (\ref{nb2}) takes the special value $1/L$ for the $j=0$ harmonic.
+
+As before, we truncate the Fourier expansion in the $y$-direction, and discretize in the
+$x$-direction, to obtain the set of tridiagonal matrix equations specified in Eqs.~(\ref{e5a}), (\ref{e5b}), and (\ref{e5c}). We can solve these equations to obtain the $U_{i,j}$, and then reconstruct
+the $u(x_i,y_j)$ from Eq.~(\ref{e5x}). Hence, we have solved the problem.
+
+\section{The Fast Fourier Transform}\label{sfft}
+The method outlined in Sect.~\ref{fftsine} for solving Poisson's equation in 2-d with
+simple Dirichlet boundary conditions in the $y$-direction requires us to perform very many
+{\em Fourier-sine transforms}:
+\begin{equation}\label{ffta}
+F_j^S = \frac{2}{J}\sum_{k=1}^{J-1} f_k\,\sin(j\,k\,\pi/J)
+\end{equation}
+for $j=0,J$, and inverse Fourier-sine transforms:
+\begin{equation}\label{fftb}
+f_j= \sum_{k=1}^{J-1} F_k^S\,\sin(j\,k\,\pi/J).
+\end{equation}
+Here, $f_j$ is the value of $f(y)$ at $y_j = j\,L/J$. 
+Thus, Eq.~(\ref{ffta}) is analogous to Eqs.~(\ref{ffta1}) and (\ref{ffta2}), whereas
+Eq.~(\ref{fftb}) can be used to reconstruct the $u(x_i,y_j)$ from the $U_{i,j}$.
+Likewise, the 
+method outlined in Sect.~\ref{fftcos} for solving Poisson's equation in 2-d with
+simple Neumann boundary conditions in the $y$-direction requires us to perform very many
+{\em Fourier-cosine transforms}:
+\begin{equation}
+F_j^C = \frac{f_0}{J} + \frac{2}{J}\sum_{k=1}^{J-1} f_k\,\cos(j\,k\,\pi/J)
++ \frac{(-1)^j\,f_J}{J}
+\end{equation}
+for $j=0,J$, and inverse Fourier-cosine transforms:
+\begin{equation}
+f_j= \sum_{k=0}^{J} F_k^C\,\cos(j\,k\,\pi/J).
+\end{equation}
+Unfortunately, performing such transforms directly requires $O(J^2)$ arithmetic
+operations, which means that they are {\em extremely expensive} in terms of cpu resources.
+ There is, however, an ingenious
+algorithm for performing Fourier transforms which only takes $O(J\,\ln J)$ arithmetic
+operations [which is much less than $O(J^2)$ operations when $J$ is large].
+This algorithm is known as the {\em fast Fourier transform} or FFT.\footnote{See {\em Numerical recipes in C: the
+art of scientific computing}, W.H.~Press, S.A.~Teukolsky, W.T.~Vettering, and
+B.R.~Flannery (Cambridge University Press, Cambridge, England, 1992), Sect.~12.2.}
+
+The details of the FFT algorithm lie beyond the scope of this course. Roughly speaking,
+the algorithm works by building up the transform in stages using 
+2, 4, 8, 16, {\em etc.} grid-points. In this course, we shall employ the
+best-known publicly available FFT library,
+called the {\tt fftw} library,\footnote{See
+{\tt http://www.fftw.org}} to perform all of our  Fourier-sine and -cosine transforms.  
+Unfortunately, the {\tt fftw} library does not directly calculate Fourier-sine and
+-cosine transforms.\footnote{This is the case for version 2 of the library (which is the version
+used in this course), but not version 3.} Instead, it calculates {\em complex} Fourier transforms:
+\begin{equation}
+F_j = \frac{1}{2J}\sum_{k=0}^{2J-1} f_k\,\exp(-{\rm i}\,j\,k\,\pi/J)
+\end{equation}
+for $j=0,2J-1$, and complex inverse Fourier transforms:
+\begin{equation}
+f_j = \sum_{k=0}^{2J-1} F_k\,\exp(\,{\rm i}\,j\,k\,\pi/J).
+\end{equation}
+Note that $f_j$ and $F_j$ are {\em periodic} in $j$ with period $2\,J$. 
+Note, further, that the data-sets associated with complex Fourier transforms contain {\em twice} as many
+elements as the data-sets associated with sine and cosine transforms. 
+However, we can easily convert a sine or cosine transform into a complex transform by {\em extending}
+its data-set. Thus, for a sine transform we write:
+\begin{eqnarray}
+f_{2J-j} &=& - f_j,\\[0.5ex]
+F_{2J-j} &=& -F_j,
+\end{eqnarray}
+for $j=1,J-1$, in which case
+\begin{equation}
+F_j^S = 2\,{\rm i}\,F_j.
+\end{equation}
+Likewise, for a cosine transform we write:
+\begin{eqnarray}
+f_{2J-j} &=& f_j,\\[0.5ex]
+F_{2J-j} &=&F_j,
+\end{eqnarray}
+for $j=1,J-1$, in which case
+\begin{equation}
+F_j^C = 2\,F_j.
+\end{equation}
+
+Listed below are a set of wrapper routines which employ the {\tt fftw} library to
+perform Fourier-sine and -cosine transforms.
+{\small\begin{verbatim}
+// FFT.cpp
+
+// Set of functions to calculate Fourier-cosine and -sine transforms
+// of real data using fftw Fast-Fourier-Transform library.
+// Input/ouput arrays are assumed to be of extent J+1.
+// Uses version 2 of fftw library (incompatible with vs 3).
+
+#include <fftw.h>
+#include <blitz/array.h>
+
+using namespace blitz;
+
+// Calculates Fourier-cosine transform of array f in array F
+void fft_forward_cos (Array<double,1> f, Array<double,1>& F)
+{
+  // Find J. Declare local arrays.
+  int J = f.extent(0) - 1;
+  int N = 2 * J;
+  fftw_complex ff[N], FF[N];
+
+  // Load and extend data
+  c_re (ff[0]) = f(0); c_im (ff[0]) = 0.;
+  c_re (ff[J]) = f(J); c_im (ff[J]) = 0.;
+  for (int j = 1; j < J; j++)
+    {
+      c_re (ff[j]) = f(j); c_im (ff[j]) = 0.;
+      c_re (ff[2*J-j]) = f(j); c_im (ff[2*J-j]) = 0.;
+    }
+
+  // Call fftw routine
+  fftw_plan p = fftw_create_plan (N, FFTW_FORWARD, FFTW_ESTIMATE);
+  fftw_one (p, ff, FF);
+  fftw_destroy_plan (p); 
+
+  // Unload data
+  F(0) = c_re (FF[0]); F(J) = c_re (FF[J]); 
+  for (int j = 1; j < J; j++)
+    {
+      F(j) = 2. * c_re (FF[j]);
+    }
+
+  // Normalize data
+  F /= 2. * double (J);
+}
+
+// Calculates inverse Fourier-cosine transform of array F in array f
+void fft_backward_cos (Array<double,1> F, Array<double,1>& f)
+{    
+  // Find J. Declare local arrays.
+  int J = f.extent(0) - 1;
+  int N = 2 * J;
+  fftw_complex ff[N], FF[N];
+
+  // Load and extend data
+  c_re (FF[0]) = F(0); c_im (FF[0]) = 0.;
+  c_re (FF[J]) = F(J); c_im (FF[J]) = 0.;
+  for (int j = 1; j < J; j++)
+    {
+      c_re (FF[j]) = F(j) / 2.; c_im (FF[j]) = 0.;
+      FF[2*J-j] = FF[j];
+    }
+
+  // Call fftw routine
+  fftw_plan p = fftw_create_plan (N, FFTW_BACKWARD, FFTW_ESTIMATE);
+  fftw_one (p, FF, ff);
+  fftw_destroy_plan (p); 
+
+  // Unload data 
+  f(0) = c_re (ff[0]); f(J) = c_re (ff[J]); 
+  for (int j = 1; j < J; j++)
+    {
+      f(j) = c_re (ff[j]);
+    }
+}
+
+// Calculates Fourier-sine transform of array f in array F
+void fft_forward_sin (Array<double,1> f, Array<double,1>& F)
+{  
+  // Find J. Declare local arrays.
+  int J = f.extent(0) - 1;
+  int N = 2 * J;
+  fftw_complex ff[N], FF[N];
+  
+  // Load and extend data 
+  c_re (ff[0]) = 0.; c_im (ff[0]) = 0.; 
+  c_re (ff[J]) = 0.; c_im (ff[J]) = 0.;
+  for (int j = 1; j < J; j++)
+    {
+      c_re (ff[j]) = f(j); c_im (ff[j]) = 0.;
+      c_re (ff[2*J-j]) = - f(j); c_im (ff[2*J-j]) = 0.;
+    }
+
+  // Call fftw routine
+  fftw_plan p = fftw_create_plan (N, FFTW_FORWARD, FFTW_ESTIMATE);
+  fftw_one (p, ff, FF);
+  fftw_destroy_plan (p); 
+
+  // Unload data
+  F(0) = 0.; F(J) = 0.;
+  for (int j = 1; j < J; j++)
+    {
+      F(j) = - 2. * c_im (FF[j]);
+    }  
+
+  // Normalize data
+  F /= 2. * double (J);
+}
+
+// Calculates inverse Fourier-sine transform of array F in array f
+void fft_backward_sin (Array<double,1> F, Array<double,1>& f)
+{ 
+  // Find J. Declare local arrays.
+  int J = f.extent(0) - 1;
+  int N = 2 * J;
+  fftw_complex ff[N], FF[N];
+
+  // Load and extend data
+  c_re (FF[0]) = 0.; c_im (FF[0]) = 0.; 
+  c_re (FF[J]) = 0.; c_im (FF[J]) = 0.;
+  for (int j = 1; j < J; j++)
+    {
+      c_re (FF[j]) = 0.; c_im (FF[j]) = - F(j) / 2.;
+      c_re (FF[2*J-j]) = 0.; c_im (FF[2*J-j]) = F(j) / 2.;
+    }
+
+  // Call fftw routine
+  fftw_plan p = fftw_create_plan (N, FFTW_BACKWARD, FFTW_ESTIMATE);
+  fftw_one (p, FF, ff);
+  fftw_destroy_plan (p); 
+
+  // Unload data
+  f(0) = 0.; f(J) = 0.;
+  for (int j = 1; j < J; j++)
+    {
+      f(j) = c_re (ff[j]);
+    }
+}
+\end{verbatim}}
+
+\section{An Example 2-D Poisson Solving Routine}\label{poisson2d}
+Listed below is an example 2-d Poisson solving routine which employs the previously
+listed tridiagonal matrix inversion  and FFT wrapper routines, as well as the {\tt Blitz++}
+library.
+{\small\begin{verbatim}
+// Poisson2d.cpp
+
+// Function to solve Poisson's equation in 2-d:
+
+//  d^2 u / dx^2 + d^2 u / dy^2 = v  for  xl <= x <= xh  and  0 <= y <= L
+
+//  alphaL u + betaL du/dx = gammaL(y)  at x=xl
+
+//  alphaH u + betaH du/dx = gammaH(y)  at x=xh
+
+// In y-direction, either simple Dirichlet boundary conditions:
+
+//  u(x,0) = u(x,L) = 0
+
+// or simple Neumann boundary conditions:
+
+//  du/dy(x,0) = du/dy(x,L) = 0
+
+// Matrices u and v assumed to be of extent N+2, J+1.
+// Arrays gammaL, gammaH assumed to be of extent J+1.
+
+// Now, (i,j)th elements of matrices correspond to
+
+//  x_i = xl + i * dx    i=0,N+1
+
+//  y_j = j * L / J      j=0,J
+
+// Here, dx = (xh - xl) / (N+1) is grid spacing in x-direction.
+
+// Now, kappa = pi * dx / L
+
+// Finally, Neumann=0/1 selects Dirichlet/Neumann bcs in y-direction.
+
+#include <blitz/array.h>
+
+using namespace blitz;
+
+void fft_forward_cos (Array<double,1> f, Array<double,1>& F);
+void fft_backward_cos (Array<double,1> F, Array<double,1>& f);
+void fft_forward_sin (Array<double,1> f, Array<double,1>& F);
+void fft_backward_sin (Array<double,1> F, Array<double,1>& f);
+void Tridiagonal (Array<double,1> a, Array<double,1> b, Array<double,1> c, 
+                  Array<double,1> w, Array<double,1>& u);
+
+void Poisson2D (Array<double,2>& u, Array<double,2> v, 
+                double alphaL, double betaL, Array<double,1> gammaL, 
+                double alphaH, double betaH, Array<double,1> gammaH,
+                double dx, double kappa, int Neumann)
+{
+  // Find N and J. Declare local arrays.
+  int N = u.extent(0) - 2;
+  int J = u.extent(1) - 1;
+  Array<double,2> V(N+2, J+1), U(N+2, J+1);
+  Array<double,1> GammaL(J+1), GammaH(J+1);
+
+  // Fourier transform boundary conditions
+  if (Neumann)
+    {
+      fft_forward_cos (gammaL, GammaL);
+      fft_forward_cos (gammaH, GammaH);
+    }
+  else
+    {
+      fft_forward_sin (gammaL, GammaL);
+      fft_forward_sin (gammaH, GammaH);
+    }
+
+  // Fourier transform source term
+  for (int i = 1; i <= N; i++)
+    {
+      Array<double,1> In(J+1), Out(J+1);
+
+      for (int j = 0; j <= J; j++) In(j) = v(i, j);
+
+      if (Neumann)
+        fft_forward_cos (In, Out);
+      else
+        fft_forward_sin (In, Out);
+
+      for (int j = 0; j <= J; j++) V(i, j) = Out(j);
+    }
+
+  // Solve tridiagonal matrix equations
+  if (Neumann)
+    {
+      for (int j = 0; j <= J; j++)
+        {  
+          Array<double,1> a(N+2), b(N+2), c(N+2), w(N+2), uu(N+2);
+
+          // Initialize tridiagonal matrix
+          for (int i = 2; i <= N; i++) a(i) = 1.;
+          for (int i = 1; i <= N; i++)
+            b(i) = -2. - double (j * j) * kappa * kappa;
+          b(1) -= betaL / (alphaL * dx - betaL);
+          b(N) += betaH / (alphaH * dx + betaH);
+          for (int i = 1; i <= N-1; i++) c(i) = 1.;
+	  
+          // Initialize right-hand side vector
+          for (int i = 1; i <= N; i++)
+            w(i) = V(i, j) * dx * dx;
+          w(1) -= GammaL(j) * dx / (alphaL * dx - betaL);
+          w(N) -= GammaH(j) * dx / (alphaH * dx + betaH);
+	  
+          // Invert tridiagonal matrix equation
+          Tridiagonal (a, b, c, w, uu);
+          for (int i = 1; i <= N; i++) U(i, j) = uu(i);
+        }
+    }
+  else
+    {
+      for (int j = 1; j < J; j++)
+        { 
+          Array<double,1> a(N+2), b(N+2), c(N+2), w(N+2), uu(N+2);
+
+          // Initialize tridiagonal matrix
+          for (int i = 2; i <= N; i++) a(i) = 1.;
+          for (int i = 1; i <= N; i++)
+            b(i) = -2. - double (j * j) * kappa * kappa;
+          b(1) -= betaL / (alphaL * dx - betaL);
+          b(N) += betaH / (alphaH * dx + betaH);
+          for (int i = 1; i <= N-1; i++) c(i) = 1.;
+	  
+          // Initialize right-hand side vector
+          for (int i = 1; i <= N; i++)
+            w(i) = V(i, j) * dx * dx;
+          w(1) -= GammaL(j) * dx / (alphaL * dx - betaL);
+          w(N) -= GammaH(j) * dx / (alphaH * dx + betaH);
+	  
+          // Invert tridiagonal matrix equation
+          Tridiagonal (a, b, c, w, uu);
+          for (int i = 1; i <= N; i++) U(i, j) = uu(i);
+        }
+      
+      for (int i = 1; i <= N  ; i++) 
+        {
+          U(i, 0) = 0.; U(i, J) = 0.;
+        }
+    }
+
+  // Reconstruct solution via inverse Fourier transform
+  for (int i = 1; i <= N; i++)
+    {
+      Array<double,1> In(J+1), Out(J+1);
+
+      for (int j = 0; j <= J; j++) In(j) = U(i, j);
+
+      if (Neumann)
+        fft_backward_cos (In, Out);
+      else
+        fft_backward_sin (In, Out);
+
+      for (int j = 0; j <= J; j++) u(i, j) = Out(j);
+    }
+
+  // Calculate i=0 and i=N+1 values  
+  for (int j = 0; j <= J; j++)
+    {
+      u(0, j) = (gammaL(j) * dx - betaL * u(1, j)) /
+        (alphaL * dx - betaL);
+      u(N+1, j) = (gammaH(j) * dx + betaH * u(N, j)) /
+        (alphaH * dx + betaH);
+    }
+}
+\end{verbatim}}
+
+\section{An Example Solution of Poisson's Equation in 2-D}
+Let us now use the techniques discussed above to solve Poisson's
+equation in two dimensions. Suppose that the source term is
+\begin{equation}
+v(x,y) = 6\,x\,y\,(1-y) - 2\,x^3
+\end{equation}
+for $0\leq x \leq 1$ and $0\leq y \leq 1$. The boundary conditions
+at $x=0$ are $\alpha_l=1$, $\beta_l=0$, and $\gamma_l=0$ [see Eq.~(\ref{e527a})], whereas
+the boundary conditions at $x=1$ are $\alpha_h=1$, $\beta_h=0$,
+and  $\gamma_h=y\,(1-y)$ [see Eq.~(\ref{e528a})]. The simple Dirichlet boundary
+conditions $u(x,0)=u(x,1)=0$ are applied at $y=0$ and $y=1$. Of course,
+this problem can be solved analytically to give
+\begin{equation}
+u(x,y) = y\,(1-y)\,x^3.
+\end{equation}
+Figures~\ref{p2da} and \ref{p2db} show comparisons between the analytic and finite difference
+solutions for $N=J=64$. It can be seen that the finite difference solution mirrors
+the analytic solution almost exactly.
+
+\begin{figure}
+\epsfysize=3in
+\centerline{\epsffile{Chapter05/p2da.eps}}
+\caption{\em Solution of Poisson's equation in two dimensions  with simple
+Dirichlet boundary conditions in the $y$-direction. The solution is plotted versus $x$ at
+$y=0.5$.
+The dotted curve (obscured)
+shows the analytic solution, whereas the open triangles show the finite difference
+solution for $N=J=64$.}\label{p2da}
+\end{figure}
+
+\begin{figure}
+\epsfysize=3in
+\centerline{\epsffile{Chapter05/p2db.eps}}
+\caption{\em Solution of Poisson's equation in two dimensions  with simple
+Dirichlet boundary conditions in the $y$-direction. The solution is plotted versus $y$ at
+$x=0.5$.
+The dotted curve (obscured)
+shows the analytic solution, whereas the open triangles show the finite difference
+solution for $N=J=64$.}\label{p2db}
+\end{figure}
+
+As a second example, suppose that the source term is
+\begin{equation}
+v(x,y) =-2\,(2\,y^3-3\,y^2+1) + 6\,(1-x^2)\,(2\,y-1)
+\end{equation}
+for $0\leq x \leq 1$ and $0\leq y \leq 1$. The boundary conditions
+at $x=0$ are $\alpha_l=1$, $\beta_l=0$, and $\gamma_l=2\,y^3-3\,y^2+1$ [see Eq.~(\ref{e527a})], whereas
+the boundary conditions at $x=1$ are $\alpha_h=1$, $\beta_h=0$,
+and  $\gamma_h=0$ [see Eq.~(\ref{e528a})]. The simple Neumann boundary
+conditions $\partial u(x,0)/\partial y=\partial u(x,1)/\partial y=0$ are applied at $y=0$ and $y=1$. Of course,
+this problem can be solved analytically to give
+\begin{equation}
+u(x,y) = (1-x^2)\,(2\,y^3-3\,y^2+1).
+\end{equation}
+Figures~\ref{p2dc} and \ref{p2dd} show comparisons between the analytic and finite difference
+solutions for $N=J=64$. It can be seen that the finite difference solution mirrors
+the analytic solution almost exactly.
+
+\begin{figure}
+\epsfysize=3in
+\centerline{\epsffile{Chapter05/p2dc.eps}}
+\caption{\em Solution of Poisson's equation in two dimensions  with simple
+Neumann boundary conditions in the $y$-direction. The solution is plotted versus $x$ at
+$y=0.5$.
+The dotted curve (obscured)
+shows the analytic solution, whereas the open triangles show the finite difference
+solution for $N=J=64$.}\label{p2dc}
+\end{figure}
+
+\begin{figure}
+\epsfysize=3in
+\centerline{\epsffile{Chapter05/p2dd.eps}}
+\caption{\em Solution of Poisson's equation in two dimensions  with simple
+Neumann boundary conditions in the $y$-direction. The solution is plotted versus $y$ at
+$x=0.5$.
+The dotted curve (obscured)
+shows the analytic solution, whereas the open triangles show the finite difference
+solution for $N=J=64$.}\label{p2dd}
+\end{figure}
+
+\section{Example 2-D Electrostatic Calculation}
+Let us perform an example 2-d electrostatic calculation. Consider a charged wire
+running parallel to the axis of a uniform, hollow, rectangular, conducting channel.
+Suppose that the vertices of the channel lie at $(x,y) = (0,0)$, $(0,1)$, $(1,0)$, and $(1,1)$.
+Suppose, further, that the wire carries a uniform charge per unit length of magnitude unity.
+The electric potential $\phi(x,y)$ inside the channel satisfies [see Eq.~(\ref{estat})]
+\begin{equation}\label{estat1}
+\frac{\partial^2 \phi(x,y)}{\partial x^2}+\frac{\partial^2 \phi(x,y)}{\partial y^2} =
+v(x,y) =  -\delta(x-x_0)\,
+\delta(y-y_0),
+\end{equation}
+where $(x_0, y_0)$ are the coordinates of the wire.
+Here, we have conveniently normalized our units such that the factor $\epsilon_0$ is absorbed into the normalization.
+Assuming that the box is grounded, the potential is
+subject to the Dirichlet boundary conditions  $\phi=0$ at $x=0$, $x=1$, $y=0$, and
+$y=1$. We require the solution in the region $0\leq x\leq 1$ and $0\leq y \leq 1$.
+
+\begin{figure}
+\epsfysize=3in
+\centerline{\epsffile{Chapter05/coulomb1.eps}}
+\caption{\em Contour plot of the electric potential generated by
+ a charged wire placed at the center of a grounded
+rectangular channel. The wire is located at $(x,y)=(0.5,0.5)$, whereas the
+channel walls are at $x=0$, $x=1$, $y=0$, and $y=1$.
+Calculation performed with $N=J=128$.}\label{coub1}
+\end{figure}
+
+Note that when discretizing Eq.~(\ref{estat1}) the right-hand side becomes
+\begin{equation}
+v(x_i, y_j) = -\frac{1}{\delta x\,\delta y}
+\end{equation}
+on the grid-point closest to the wire, with $v(x_i, y_j) = 0$ on the remaining grid-points.
+Here,  $\delta x$ and $\delta y$ are the grid spacings in the $x$- and
+$y$- directions, respectively.
+
+\begin{figure}
+\epsfysize=3in
+\centerline{\epsffile{Chapter05/coulomb2.eps}}
+\caption{\em  Vector plot showing the direction of the electric field generated by a charged wire placed at the center of a grounded
+rectangular channel. The wire is located at $(x,y)=(0.5,0.5)$, whereas the
+channel walls are at $x=0$, $x=1$, $y=0$, and $y=1$. Calculation performed with $N=J=128$.}\label{coub2}
+\end{figure}
+
+Figures~\ref{coub1} and \ref{coub2} show the electric potential $\phi(x,y)$ and  electric
+field ${\bf E} = -\nabla \phi$ generated by a wire placed at the center of the
+channel: {\em i.e.}, $(x_0,y_0) = (0.5,0.5)$. The calculation was performed with the
+previously listed 2-d Poisson solver using
+$N=J=128$.
+
+\begin{figure}
+\epsfysize=3in
+\centerline{\epsffile{Chapter05/coulomb3.eps}}
+\caption{\em  Contour plot of the electric potential  generated by
+ a charged wire offset from the center of a grounded
+rectangular channel. The wire is located at $(x,y)=(0.25,0.5)$, whereas the
+channel walls are at $x=0$, $x=1$, $y=0$, and $y=1$. Calculation performed with $N=J=128$. }\label{coub3}
+\end{figure}
+
+Figures~\ref{coub3} and \ref{coub4} show the electric potential $\phi(x,y)$ and  electric
+field ${\bf E} = -\nabla \phi$ generated by a wire offset from the center of the
+channel: {\em i.e.}, $(x_0,y_0) = (0.25,0.5)$. The calculation was performed with the
+previously listed 2-d Poisson solver using
+$N=J=128$.
+
+\begin{figure}
+\epsfysize=3in
+\centerline{\epsffile{Chapter05/coulomb4.eps}}
+\caption{\em  Vector plot showing the direction of the electric field generated by a charged wire 
+offset from the center of a grounded
+rectangular channel. The wire is located at $(x,y)=(0.25,0.5)$, whereas the
+channel walls are at $x=0$, $x=1$, $y=0$, and $y=1$. Calculation performed with $N=J=128$. }\label{coub4}
+\end{figure}
+
+\section{3-D Problems}
+The techniques discussed in Sects.~\ref{fftsine} and \ref{fftcos} for solving
+Poisson's equation in two dimensions with a restricted class of boundary conditions can easily
+be generalized to three dimensions. In the 3-d case, it is necessary to Fourier
+transform in {\em two} directions (the $y$ and $z$ directions, say) in order to reduce the
+problem to a system of uncoupled tridiagonal matrix equations. These equations can be inverted
+in the usual manner, and the solution can then be reconstructed via a double inverse Fourier
+transform.

@@ -1,0 +1,614 @@
+\chapter{Particle-in-Cell Codes}
+\section{Introduction}
+Consider an unmagnetized, uniform, 1-dimensional plasma consisting of $N$ electrons and $N$ unit-charged 
+ions.
+Now,  ions are much more massive than  electrons.
+Hence, on short time-scales, we can treat the ions as a static 
+neutralizing background, and only consider the motion of the electrons. Let $r_i$ be the
+$x$-coordinate of the $i$th electron. The equations of motion of the
+$i$th electron are written:
+\begin{eqnarray}
+\frac{dr_i}{dt} &=& v_i,\\[0.5ex]
+\frac{dv_i}{dt} &=& - \frac{e\,E(r_i)}{m_e},
+\end{eqnarray}
+where $e>0$ is the magnitude of the electron charge, $m_e$  the electron mass, and $E(x)$  the $x$-component
+of the electric field-strength at position $x$. Now, the electric field-strength can be
+expressed in terms of an electric
+potential:
+\begin{equation}
+E(x) = - \frac{d\phi(x)}{dx}.
+\end{equation}
+Furthermore, from the Poisson-Maxwell equation, we have
+\begin{equation}
+\frac{d^2\phi(x)}{dx^2} = -\frac{e}{\epsilon_0}\,\{n_0- n(x)\},
+\end{equation}
+where $\epsilon_0$ is the permittivity of free-space, $n(x)$  the electron number
+density ({\em i.e.}, $n(x)\,dx$ is the number of electrons in the interval $x$ to $x+dx$),
+and $n_0$  the uniform ion number density. Of course, the average value of $n(x)$ is
+equal to $n_0$, since there are equal numbers of ions and electrons. 
+
+Let us consider an initial electron distribution function consisting of two counter-propagating
+Maxwellian beams of mean speed $v_b$ and thermal spread $v_{th}$: {\em i.e.},
+\begin{equation}
+f(x,v) = \frac{n_0}{2}\left\{\frac{1}{\sqrt{2\,\pi}\,v_{th}}
+\,{\rm e}^{-(v-v_b)^2/2\,v_{th}^{\,2}}+ \frac{1}{\sqrt{2\,\pi}\,v_{th}}\,{\rm e}^{-(v+v_b)^2/2\,v_{th}^{\,2}}
+\right\}.
+\end{equation}
+Here, $f(x,v)\,dx\,dv$ is the number of electrons between $x$ and $x+dx$ with velocities
+in the range $v$ to $v+dv$. Of course, $n(x) = \int_{-\infty}^{\infty} f(x,v)\,dv$.
+The beam temperature $T$ is related to the thermal velocity via $v_{th} = \sqrt{k_B\,T/m_e}$,
+where $k_B$ is the Boltzmann constant. It is well-known that if $v_b$ is significantly
+larger than $v_{th}$ then the above distribution is unstable to a plasma instability
+called the {\em two-stream instability}.\footnote{T.H.~Stix, {\em The theory of plasma waves}, 1st Ed.
+(McGraw-Hill, New York NY, 1962).} Let us investigate this instability numerically.
+
+\section{Normalization Scheme}
+It is convenient to normalize time with respect to $\omega_p^{-1}$, where
+\begin{equation}
+\omega_p^2 = \frac{n_0\,e^2}{\epsilon_0\,m_e}
+\end{equation}
+is the  so-called {\em plasma frequency}: {\em i.e.}, the typical frequency of electrostatic electron oscillations. Likewise it is convenient to normalize length with respect to the so-called {\em Debye length}:
+$$
+\lambda_D = \frac{v_{th}}{\omega_p},
+$$
+which is the length-scale above which the electrons exhibit collective ({\em i.e.},
+plasma-like) effects, instead of acting like individual particles.
+
+Our normalized equations take the form:
+\begin{eqnarray}
+\frac{dx_i}{dt} &=&v_i,\label{eqm1}\\[0.5ex]
+\frac{d v_i}{dt} &=& - E(x_i),\label{eqm2}\\[0.5ex]
+E(x) &=& - \frac{d\phi(x)}{dx},\label{eqm4}\\[0.5ex]
+\frac{d^2\phi(x)}{dx^2} &=& \frac{n(x)}{n_0}-1.\label{eqm3}
+\end{eqnarray}
+whereas our initial distribution function becomes
+\begin{equation}
+f(x,v) = \frac{n_0}{2}\left\{\frac{1}{\sqrt{2\,\pi}}
+\,{\rm e}^{-(v-v_b)^2/2}+ \frac{1}{\sqrt{2\,\pi}}\,{\rm e}^{-(v+v_b)^2/2}
+\right\}.
+\end{equation}
+Note that $v_{th}=1$ in normalized units.
+
+Let us solve the above system of equations in the domain $0\leq x\leq L$. 
+Furthermore, for the sake of simplicity, let us adopt {\em periodic} boundary conditions:
+{\em i.e.}, let us identify the left and right boundaries of our solution domain.
+It follows that $n(0)=n(L)$,  $\phi(0)=\phi(L)$, and $E(0) = E(L)$. Moreover, any electron
+which crosses the right boundary of the solution domain must reappear at the left boundary with
+the same velocity, and
+{\em vice versa}.
+
+\section{Solution of Electron Equations of Motion}
+We can solve the electron equations of motion, (\ref{eqm1}) and (\ref{eqm2}), as a set
+of $2N$ coupled first-order ODEs using the RK4 methods discussed in Sect.~\ref{ode}.
+However, in order to evaluate the right-hand sides of these equations we need to know
+the electric field $E(x)$  at each time-step.
+We can achieve this by solving Poisson's equation, (\ref{eqm3}), every time-step.
+However, in order to determine the source term for this equation we need to calculate the
+electron number density $n(x)$, which is, of course, a function of the instantaneous
+electron locations.
+
+\section{Evaluation of Electron Number Density}
+In order to obtain the electron number density $n(x)$
+from the electron coordinates $r_i$ we adopt a so-called {\em particle-in-cell} (PIC) approach.
+Let us define a set of $J$ equally
+spaced spatial grid-points located at coordinates
+\begin{equation}
+x_j = j\,\delta x,
+\end{equation}
+for $j=0,J-1$, where $\delta x = L / J$.  Let $n_j\equiv n(x_j)$.
+Suppose that the $i$th electron lies between the $j$th and $(j+1)$th grid-points:
+{\em i.e.}, $x_j < r_i < x_{j+1}$. We let
+\begin{equation}
+n_j  \rightarrow n_j+\left.\left(\frac{x_{j+1}-r_i}{x_{j+1}-x_j}\right)\right/\delta x,
+\end{equation}
+and
+\begin{equation}
+n_{j+1} \rightarrow n_{j+1}+ \left.\left(\frac{r_i-x_j}{x_{j+1}-x_j}\right)\right/\delta x.
+\end{equation}
+Thus, $n_j\,\delta x$ increases by 1 if the electron is at the $j$th grid-point, $n_{j+1}\,\delta x$ 
+increases by 1 if the electron is at the $(j+1)$th grid-point, and $n_j\,\delta x$ and $n_{j+1}\,\delta x$
+both increase by $1/2$ if the electron is halfway between the two grid-points, {\em etc.}
+Performing a similar assignment for each electron in turn allows us to
+build up the $n_j$ from the electron coordinates (assuming that all the $n_j$ are initialized
+to zero at the start of this process).
+
+
+\section{Solution of Poisson's Equation}
+Consider the solution of Poisson's equation:
+\begin{equation}
+\frac{d^2\phi(x)}{dx^2} = \rho(x),
+\end{equation}
+where $\rho(x) = n(x)/n_0-1$. Note that $n_0 = N/L$ in normalized
+units. Let $\phi_j\equiv\phi(x_j)$ and $\rho_j\equiv
+\rho(x_j)$. 
+We can write
+\begin{eqnarray}
+\phi_j &=& \sum_{j'=0,J-1}\hat{\phi}_{j'} \,{\rm e}^{\,{\rm i}\,j\,j'\,2\,\pi/J},\\[0.5ex]
+\rho_j &=& \sum_{j'=0,J-1}\hat{\rho}_{j'} \,{\rm e}^{\,{\rm i}\,j\,j'\,2\,\pi/J},
+\end{eqnarray}
+which automatically satisfies the periodic boundary conditions $\phi_J=\phi_0$ and $\rho_J=\rho_0$. 
+Note that $\hat{\rho}_0=0$, since $\int_0^L n(x)\,dx = n_0$. The other $\hat{\rho}_j$ are obtained
+from
+\begin{equation}
+\hat{\rho}_j = \frac{1}{J}\sum_{j'=0,J-1}\rho_{j'} \,{\rm e}^{-{\rm i}\,j\,j'\,2\,\pi/J},
+\end{equation}
+for $j=1,J-1$.
+The Fourier transformed version of Poisson's equation yields
+\begin{equation}
+\hat{\phi}_0 = 0
+\end{equation}
+and
+\begin{equation}
+\hat{\phi}_j = - \frac{\hat{\rho}_j}{j^2\,\kappa^2}
+\end{equation}
+for $j=1,J/2$, where $\kappa = 2\pi / L$. Finally,
+\begin{equation}
+\hat{\phi}_j = \hat{\phi}^\ast_{J-j}
+\end{equation}
+for $j=J/2+1$ to $J-1$, which ensures that the $\phi_j$ remain real.
+The discretized version of Eq.~(\ref{eqm4}) is
+\begin{equation}
+E_j = \frac{\phi_{j-1}-\phi_{j+1}}{2\,\delta x}.
+\end{equation}
+Of course, $j=0$ and $j=J-1$ are special cases which can be resolved using the periodic
+boundary conditions.
+Finally, suppose that the coordinate of the $i$th electron lies between the $j$th and $(j+1)$th
+grid-points: {\em i.e.}, $x_j < r_i < x_{j+1}$.  We can then use linear interpolation to
+evaluate the electric field seen by the $i$th electron:
+\begin{equation}
+E(r_i) = \left(\frac{x_{j+1}-r_i}{x_{j+1}-x_j}\right)E_j+\left(\frac{r_i - x_j}{x_{j+1}-x_j}\right)
+E_{j+1}.
+\end{equation}
+
+\section{An example 1-D PIC Code}
+The following code  is an implementation of the ideas developed above.
+
+The main function  reads in the calculation parameters, checks that they
+are sensible, initializes the electron coordinates, and then evolves the
+electron equations of motion from $t=0$ to some specified $t_{\rm max}$,
+using a fixed step RK4 routine with some specified time-step $\delta t$.
+Information on the electron phase-space coordinates and the electric field is periodically written
+to various data-files.
+\begin{verbatim}
+// 1-d PIC code to solve plasma two-stream instability problem.
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <math.h>
+#include <time.h>
+#include <blitz/array.h>
+#include <fftw.h>
+
+using namespace blitz;
+
+void Output (char* fn1, char* fn2, double t, 
+	     Array<double,1> r, Array<double,1> v);
+void Density (Array<double,1> r, Array<double,1>& n);
+void Electric (Array<double,1> phi, Array<double,1>& E);
+void Poisson1D (Array<double,1>& u, Array<double,1> v, double kappa);
+void rk4_fixed (double& x, Array<double,1>& y, 
+              void (*rhs_eval)(double, Array<double,1>, Array<double,1>&), 
+              double h);
+void rhs_eval (double t, Array<double,1> y, Array<double,1>& dydt);
+void Load (Array<double,1> r, Array<double,1> v, Array<double,1>& y);
+void UnLoad (Array<double,1> y, Array<double,1>& r, Array<double,1>& v);
+double distribution (double vb);
+
+double L; int N, J;
+
+int main()
+{
+  // Parameters
+  L;            // Domain of solution 0 <= x <= L (in Debye lengths)
+  N;            // Number of electrons
+  J;            // Number of grid points
+  double vb;    // Beam velocity
+  double dt;    // Time-step (in inverse plasma frequencies)
+  double tmax;  // Simulation run from t = 0. to t = tmax
+
+  // Get parameters
+  printf ("Please input N:  "); scanf ("%d", &N);
+  printf ("Please input vb:  "); scanf ("%lf", &vb); 
+  printf ("Please input L:  "); scanf ("%lf", &L);
+  printf ("Please input J:  "); scanf ("%d", &J);
+  printf ("Please input dt:  "); scanf ("%lf", &dt); 
+  printf ("Please input tmax:  "); scanf ("%lf", &tmax);
+  int skip = int (tmax / dt) / 10;
+  if ((N < 1) || (J < 2) || (L <= 0.) || (vb <= 0.) 
+      || (dt <= 0.) || (tmax <= 0.) || (skip < 1))
+    {
+      printf ("Error - invalid input parameters\n");
+      exit (1);
+    }
+
+  // Set names of output files
+  char* phase[11]; char* data[11];
+  phase[0] = "phase0.out";phase[1] = "phase1.out";phase[2] = "phase2.out"; 
+  phase[3] = "phase3.out";phase[4] = "phase4.out";phase[5] = "phase5.out"; 
+  phase[6] = "phase6.out";phase[7] = "phase7.out";phase[8] = "phase8.out";
+  phase[9] = "phase9.out";phase[10] = "phase10.out";data[0] = "data0.out";  
+  data[1] = "data1.out"; data[2] = "data2.out"; data[3] = "data3.out"; 
+  data[4] = "data4.out"; data[5] = "data5.out"; data[6] = "data6.out"; 
+  data[7] = "data7.out"; data[8] = "data8.out"; data[9] = "data9.out"; 
+  data[10] = "data10.out";
+
+  // Initialize solution
+  double t = 0.;
+  int seed = time (NULL); srand (seed);
+  Array<double,1> r(N), v(N);
+  for (int i = 0; i < N; i++)
+    {
+      r(i) = L * double (rand ()) / double (RAND_MAX);
+      v(i) = distribution (vb);
+    }
+  Output (phase[0], data[0], t, r, v);
+
+  // Evolve solution
+  Array<double,1> y(2*N);
+  Load (r, v, y);
+  for (int k = 1; k <= 10; k++)
+    {
+      for (int kk = 0; kk < skip; kk++)
+        {
+           // Take time-step
+           rk4_fixed (t, y, rhs_eval, dt);
+
+           // Make sure all coordinates in range 0 to L.
+           for (int i = 0; i < N; i++)
+             {
+               if (y(i) < 0.) y(i) += L;
+               if (y(i) > L) y(i) -= L;
+             }
+	  
+           printf ("t = %11.4e\n", t);
+        }
+      printf ("Plot %3d\n", k);
+
+      // Output data
+      UnLoad (y, r, v);
+      Output(phase[k], data[k], t, r, v);
+    }
+
+  return 0;
+}
+\end{verbatim}
+
+The following routine outputs the simulation data to various data-files.
+\begin{verbatim}
+// Write data to output files
+
+void Output (char* fn1, char* fn2, double t,
+	     Array<double,1> r, Array<double,1> v)
+{  
+  // Write phase-space data
+  FILE* file = fopen (fn1, "w");
+  for (int i = 0; i < N; i++)
+    fprintf (file, "%e %e\n", r(i), v(i));
+  fclose (file);
+
+  // Write electric field data
+  Array<double,1> ne(J), n(J), phi(J), E(J);  
+  Density (r, ne);
+  for (int j = 0; j < J; j++)
+    n(j) = double (J) * ne(j) / double (N) - 1.;
+  double kappa = 2. * M_PI / L; 
+  Poisson1D (phi, n, kappa);
+  Electric (phi, E);
+
+  file = fopen (fn2, "w");
+  for (int j = 0; j < J; j++)
+    {
+      double x = double (j) * L / double (J);
+      fprintf (file, "%e %e %e %e\n", x, ne(j), n(j), E(j));
+    }
+  double x = L;
+  fprintf (file, "%e %e %e %e\n", x, ne(0), n(0), E(0));
+  fclose (file);
+}
+\end{verbatim}
+
+The following routine returns a random velocity distributed on a double Maxwellian distribution function corresponding
+to two counter-streaming beams. The algorithm used to achieve this is
+called the {\em rejection method}, and will be discussed later in
+this course.
+\begin{verbatim}
+// Function to distribute electron velocities randomly so as 
+// to generate two counter propagating warm beams of thermal
+// velocities unity and mean velocities +/- vb.
+// Uses rejection method.
+
+double distribution (double vb)
+{ 
+  // Initialize random number generator
+  static int flag = 0;
+  if (flag == 0)
+    {
+      int seed = time (NULL);
+      srand (seed);
+      flag = 1;
+    }
+
+  // Generate random v value
+  double fmax = 0.5 * (1. + exp (-2. * vb * vb));
+  double vmin = - 5. * vb;
+  double vmax = + 5. * vb;
+  double v = vmin + (vmax - vmin) * double (rand ()) / double (RAND_MAX);
+
+  // Accept/reject value
+  double f = 0.5 * (exp (-(v - vb) * (v - vb) / 2.) +
+		    exp (-(v + vb) * (v + vb) / 2.));
+  double x = fmax * double (rand ()) / double (RAND_MAX);
+  if (x > f) return distribution (vb);
+  else return v;
+}
+\end{verbatim}
+
+The routine below evaluates the electron number density on an evenly
+spaced mesh given the instantaneous electron coordinates.
+\begin{verbatim}
+// Evaluates electron number density n(0:J-1) from 
+// array r(0:N-1) of electron coordinates.
+
+void Density (Array<double,1> r, Array<double,1>& n)
+{
+  // Initialize 
+  double dx = L / double (J);
+  n = 0.;
+
+  // Evaluate number density.
+  for (int i = 0; i < N; i++)
+    {
+      int j = int (r(i) / dx);
+      double y = r(i) / dx - double (j);
+      n(j) += (1. - y) / dx;
+      if (j+1 == J) n(0) += y / dx;
+      else n(j+1) += y / dx;
+    }
+}
+\end{verbatim}
+
+The following functions are wrapper routines for using the fftw library
+with periodic functions.
+\begin{verbatim}
+// Functions to calculate Fourier transforms of real data 
+// using fftw Fast-Fourier-Transform routine.
+// Input/ouput arrays are assumed to be of extent J.
+
+// Calculates Fourier transform of array f in arrays Fr and Fi
+void fft_forward (Array<double,1>f, Array<double,1>&Fr, 
+      Array<double,1>& Fi)
+{
+  fftw_complex ff[J], FF[J];
+
+  // Load data
+  for (int j = 0; j < J; j++)
+    {
+      c_re (ff[j]) = f(j); c_im (ff[j]) = 0.;
+    }
+
+  // Call fftw routine
+  fftw_plan p = fftw_create_plan (J, FFTW_FORWARD, FFTW_ESTIMATE);
+  fftw_one (p, ff, FF);
+  fftw_destroy_plan (p); 
+
+  // Unload data
+  for (int j = 0; j < J; j++)
+    {
+      Fr(j) = c_re (FF[j]); Fi(j) = c_im (FF[j]);
+    }
+
+  // Normalize data
+  Fr /= double (J);
+  Fi /= double (J);
+}
+
+// Calculates inverse Fourier transform of arrays Fr and Fi in array f
+void fft_backward (Array<double,1> Fr, Array<double,1> Fi, 
+      Array<double,1>& f)
+{
+  fftw_complex ff[J], FF[J];
+
+  // Load data
+  for (int j = 0; j < J; j++)
+    {
+      c_re (FF[j]) = Fr(j); c_im (FF[j]) = Fi(j);
+    }
+
+  // Call fftw routine
+  fftw_plan p = fftw_create_plan (J, FFTW_BACKWARD, FFTW_ESTIMATE);
+  fftw_one (p, FF, ff);
+  fftw_destroy_plan (p); 
+
+  // Unload data
+  for (int j = 0; j < J; j++)
+      f(j) = c_re (ff[j]); 
+}
+\end{verbatim}
+
+The following routine solves Poisson's equation in 1-D to find the
+instantaneous electric potential on a uniform grid.
+\begin{verbatim}
+// Solves 1-d Poisson equation:
+//    d^u / dx^2 = v   for  0 <= x <= L
+// Periodic boundary conditions:
+//    u(x + L) = u(x),  v(x + L) = v(x)
+// Arrays u and v assumed to be of length J.
+// Now, jth grid point corresponds to
+//    x_j = j dx  for j = 0,J-1
+// where dx = L / J.
+// Also,
+//    kappa = 2 pi / L
+
+void Poisson1D (Array<double,1>& u, Array<double,1> v, double kappa)
+{
+  // Declare local arrays.
+  Array<double,1> Vr(J), Vi(J), Ur(J), Ui(J);
+
+  // Fourier transform source term
+  fft_forward (v, Vr, Vi);
+
+  // Calculate Fourier transform of u
+  Ur(0) = Ui(0) = 0.;
+  for (int j = 1; j <= J/2; j++)
+    {
+      Ur(j) = - Vr(j) / double (j * j) / kappa / kappa;
+      Ui(j) = - Vi(j) / double (j * j) / kappa / kappa;
+    } 
+  for (int j = J/2; j < J; j++)
+    {
+      Ur(j) = Ur(J-j);
+      Ui(j) = - Ui(J-j);
+    }
+
+  // Inverse Fourier transform to obtain u
+  fft_backward (Ur, Ui, u);
+}
+\end{verbatim}
+
+The following function evaluates the electric field on a uniform grid
+from the electric potential.
+\begin{verbatim}
+// Calculate electric field from potential
+
+void Electric (Array<double,1> phi, Array<double,1>& E)
+{
+  double dx = L / double (J);
+
+  for (int j = 1; j < J-1; j++)
+    E(j) = (phi(j-1) - phi(j+1)) / 2. / dx;
+  E(0) = (phi(J-1) - phi(1)) / 2. / dx;
+  E(J-1) = (phi(J-2) - phi(0)) / 2. / dx;
+}
+\end{verbatim}
+
+The following routine is the right-hand side routine for the electron
+equations of motion. Is is designed to be used with the fixed-step
+RK4 solver described earlier in this course.
+\begin{verbatim}
+// Electron equations of motion:
+//    y(0:N-1)  = r_i
+//    y(N:2N-1) = dr_i/dt
+
+void rhs_eval (double t, Array<double,1> y, Array<double,1>& dydt)
+{
+  // Declare local arrays
+  Array<double,1> r(N), v(N), rdot(N), vdot(N), r0(N);
+  Array<double,1> ne(J), rho(J), phi(J), E(J);
+
+  // Unload data from y
+  UnLoad (y, r, v);
+
+  // Make sure all coordinates in range 0 to L
+  r0 = r;
+  for (int i = 0; i < N; i++)
+    {
+      if (r0(i) < 0.) r0(i) += L;
+      if (r0(i) > L) r0(i) -= L;
+    }
+
+  // Calculate electron number density
+  Density (r0, ne);
+
+  // Solve Poisson's equation
+  double n0 = double (N) / L;
+  for (int j = 0; j < J; j++)
+    rho(j) = ne(j) / n0 - 1.;
+  double kappa = 2. * M_PI / L; 
+  Poisson1D (phi, rho, kappa);
+
+  // Calculate electric field
+  Electric (phi, E);
+
+  // Equations of motion
+  for (int i = 0; i < N; i++)
+    {
+      double dx = L / double (J);
+      int j = int (r0(i) / dx);
+      double y = r0(i) / dx - double (j);
+      
+      double Efield;
+      if (j+1 == J)
+         Efield = E(j) * (1. - y) + E(0) * y;
+      else
+         Efield = E(j) * (1. - y) + E(j+1) * y;
+
+      rdot(i) = v(i);
+      vdot(i) = - Efield;
+    }
+
+  // Load data into dydt
+  Load (rdot, vdot, dydt);
+}
+\end{verbatim}
+
+
+The following functions load and unload the electron phase-space
+coordinates into the solution vector \verb!y! used by the RK4 routine.
+\begin{verbatim}
+// Load particle coordinates into solution vector
+
+void Load (Array<double,1> r, Array<double,1> v, Array<double,1>& y)
+{
+  for (int i = 0; i < N; i++)
+    {
+      y(i) = r(i);
+      y(N+i) = v(i);
+    }
+}
+
+// Unload particle coordinates from solution vector
+
+void UnLoad (Array<double,1> y, Array<double,1>& r, Array<double,1>& v)
+{
+  for (int i = 0; i < N; i++)
+    {
+      r(i) = y(i);
+      v(i) = y(N+i);
+    }
+}
+\end{verbatim}
+
+\begin{figure}
+\epsfysize=3.5in
+\centerline{\epsffile{Chapter08/pic1.eps}}
+\caption{\em The electron phase-space distribution evaluated
+at various times for a 1-dimensional two-stream instability calculation performed with $N=20000$, $J=1000$, $L=100$, $v_b = 3$, and $\delta t =0.1$.}\label{pic1}
+\end{figure}
+
+\section{Results}
+Figures~\ref{pic1} and \ref{pic2} show the electron phase-space distributions
+evaluated at equally spaced times for a two-stream instability calculation
+performed with $2\times 10^4$ electrons. It can be seen that the distribution
+initially takes the form of two uniform bands, corresponding to two
+counter-streaming electron beams. However, as time progresses, the
+bands spontaneously develop structure which grows in magnitude and
+eventually converts the phase-space distribution into a set of connected
+vortices. In this final state, the electrons are basically bouncing backwards
+and forwards in  a quasi-periodic electric potential generated by non-uniformities
+in the electron density. In other words,  the instability effectively destroys the two
+beams. For this reason, the two-stream instability is of major
+concern in particle accelerators, which often consist of counter-propagating
+charged particle beams.
+
+\begin{figure}
+\epsfysize=3.5in
+\centerline{\epsffile{Chapter08/pic2.eps}}
+\caption{\em The electron phase-space distribution evaluated
+at various times for a 1-dimensional two-stream instability calculation performed with $N=20000$, $J=1000$, $L=100$, $v_b = 3$, and $\delta t =0.1$.}\label{pic2}
+\end{figure}
+
+\section{Discussion}
+Obviously, the ideas discussed above could be generalized in a fairly
+straight-forward manner to deal with the evolution of two and three-dimensional charged particle distributions. PIC codes have the advantage that
+they are reasonably straight-forward to write. Unfortunately, PIC codes
+also have a number of disadvantages. The first is that PIC codes suffer from
+high levels of statistical noise,  since they generally only deal with a
+relatively small number of particles (typically, $\leq 10^6$). Real 
+physical systems
+do not exhibit anything like the same level of statistical noise, since they generally
+contain of order Avogadro's number ($\sim 10^{24}$) of interacting particles.  Another problem
+with PIC codes is that they do not handle charged particle collisions very
+well. The reason for this is that there are generally a large number
+of particles in each cell (for practical reasons),  and the short range Coulomb fields of these
+particles tend to cancel one another out (recall that the electric field is only
+calculated at the cell vertices).

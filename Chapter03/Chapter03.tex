@@ -1,0 +1,1247 @@
+\chapter{Integration of ODEs}\label{ode}
+\section{Introduction}
+In this section, we shall  discuss the standard numerical techniques
+used to integrate systems of ordinary differential equations (ODEs). We shall then employ these
+techniques to simulate the trajectories of various different types
+of baseball pitch.
+
+By definition, an ordinary differential equation, or o.d.e., is a differential
+equation in which all dependent variables are functions of a {\em single}\/ independent variable. 
+Furthermore, an $n$th-order o.d.e.\ is such that, when it is reduced to its simplest
+form, the highest order derivative it contains is $n$th-order.
+
+ According
+to Newton's laws of motion, the motion of any collection of rigid objects can
+be reduced to a set of second-order o.d.e.s.\ in which  time, $t$, is the common independent
+variable. For instance, the equations of motion of a set of $n$ interacting point
+objects moving in 1-dimension might take the form:
+\begin{equation}
+\frac{d^2 x_j}{dt^2} = \frac{F_j(x_1,...,x_n,t)}{m_j}
+\end{equation}
+for $j=1$ to $n$, where $x_j$ is the position of the $j$th object, $m_j$ is
+its mass, {\em etc.} Note that a set of $n$ second-order o.d.e.s can
+always be rewritten as a set of $2n$ first-order o.d.e.s. Thus, the above
+equations of motion can be rewritten:
+\begin{eqnarray}
+\frac{dx_j}{dt} &=& v_j,\\[0.5ex]
+\frac{dv_j}{dt} &=& \frac{F_j(x_1,...,x_n,t)}{m_j}.
+\end{eqnarray}
+for $j=1$ to $n$. We conclude that a general knowledge of how to numerically solve a set of
+coupled first-order o.d.e.s\ would enable us to investigate the behaviour of
+a wide variety of interesting dynamical systems.
+
+\section{Euler's Method}
+Consider the general first-order o.d.e.,
+\begin{equation}
+y' = f(x,y),\label{e1.19}
+\end{equation}
+where $'$ denotes $d/dx$, subject to the general initial-value boundary
+condition
+\begin{equation}
+y(x_0) = y_0.
+\end{equation}
+Clearly, if we can find a  method for numerically solving this problem, then we should
+have little difficulty  generalizing it to
+deal with a system of $n$ simultaneous first-order o.d.e.s.
+
+It is important to appreciate that the numerical solution to a differential
+equation is only an {\em approximation}\/ to the actual solution. The actual
+solution, $y(x)$, to Eq.~(\ref{e1.19}) is (presumably)
+a {\em continuous}\/ function of a continuous
+variable, $x$. However, when we solve this equation numerically, the best that we can
+do is to evaluate approximations to the
+function  $y(x)$ at a series of {\em discrete}\/ grid-points, the $x_n$ (say), where
+$n=0,1,2,\cdots$ and $x_0<x_1<x_2 \cdots$. For the moment, we shall restrict our
+discussion to {\em equally spaced}\/ grid-points, where
+\begin{equation}
+x_n = x_0 + n\,h.
+\end{equation}
+Here, the quantity $h$ is referred to as the {\em step-length}. 
+ Let $y_n$ be our approximation
+to $y(x)$ at  the grid-point $x_n$. A numerical integration scheme is
+essentially a method which somehow employs the information contained in the original
+o.d.e., Eq.~(\ref{e1.19}), to construct a series of rules interrelating the
+various $y_n$. 
+
+The simplest possible integration scheme was invented by the celebrated
+18th century Swiss mathematician Leonhard Euler, and is, therefore, called
+{\em Euler's method}. Incidentally, it is interesting to note that virtually
+all of the standard methods used in numerical analysis were invented
+ {\em  before}\/ the advent of electronic computers. In olden days, people
+actually performed numerical calculations {\em by hand}---and a very long and tedious
+process it must have been! Suppose that we have evaluated
+an  approximation, $y_n$, to the solution, $y(x)$, of Eq.~(\ref{e1.19}) at the grid-point
+$x_n$. The approximate gradient of $y(x)$ at this point is, therefore,  given by
+\begin{equation}
+y_n' = f(x_n,y_n).
+\end{equation}
+Let us approximate the curve $y(x)$ as a {\em straight-line}\/ between the
+neighbouring grid-points $x_n$ and $x_{n+1}$. It follows that
+\begin{equation}
+y_{n+1} = y_n + y_n'\,h,
+\end{equation}
+or
+\begin{equation}
+y_{n+1} = y_n +f(x_n,y_n)\,h.\label{e1.24}
+\end{equation}
+The above formula is the essence of Euler's method. It enables us to calculate
+all of the $y_n$, given the initial value, $y_0$, at the first grid-point,
+$x_0$. Euler's method is illustrated in Fig.~\ref{f2}.
+
+\begin{figure}
+\epsfysize=2.5in
+\centerline{\epsffile{Chapter03/euler.eps}}
+\caption{\em Illustration of Euler's method.}\label{f2}
+\end{figure}
+
+\section{Numerical Errors}
+There are two major sources of error associated with a numerical integration scheme for
+o.d.e.s: namely, {\em truncation error}\/ and {\em round-off error}. 
+Truncation error arises in Euler's method because the curve $y(x)$ is {\em not}\/
+generally a straight-line between the neighbouring grid-points
+$x_n$ and $x_{n+1}$, as assumed above. The error associated with this
+approximation can easily be assessed by Taylor expanding $y(x)$ about
+$x=x_n$:
+\begin{eqnarray}
+y(x_n + h) &= &y(x_n) + h\,y'(x_n)+ \frac{h^2}{2}\,y''(x_n)+\cdots\nonumber\\[0.5ex]
+& = &y_n + h\,f(x_n,y_n) + \frac{h^2}{2}\,y''(x_n)+\cdots.\label{e1.25}
+\end{eqnarray}
+A comparison of Eqs.~(\ref{e1.24}) and (\ref{e1.25}) yields
+\begin{equation}
+y_{n+1} = y_n + h\,f(x_n,y_n) + O(h^2).
+\end{equation}
+In other words, every time we take a step using Euler's method we incur
+a truncation error of $O(h^2)$, where $h$ is the step-length. Suppose that we
+use Euler's method to integrate our o.d.e.\ over an $x$-interval of
+order unity. This requires $O(h^{-1})$ steps. If each step incurs an
+error of $O(h^2)$, and the errors are simply cumulative
+(a fairly conservative assumption), then the net truncation
+error is $O(h)$. In other words, the error associated with integrating
+an o.d.e.\ over a finite interval using Euler's method is directly
+proportional to the step-length. Thus, if we want to keep the relative
+error in the integration below about $10^{-6}$ then we would need to
+take about one million steps per unit interval in $x$. Incidentally,
+Euler's method is termed a {\em first-order}\/ integration method because the
+truncation
+error associated with integrating over a finite interval scales like
+$h^1$. 
+More generally, an integration 
+ method is conventionally called $n$th order if its truncation
+error {\em per step}\/ is $O(h^{n+1})$. 
+
+Note that truncation error would be incurred even if computers performed
+floating-point arithmetic operations to infinite accuracy. Unfortunately, computers
+{\em do not}\/ perform such  operations to infinite accuracy. In fact,
+a computer is only capable
+of storing a floating-point number to a fixed number of
+decimal places. For every type of computer, there is a characteristic  number,
+$\eta$, which is defined as the smallest number which when added to a number
+of order unity gives rise to a new number: {\em i.e.}, a number
+which when taken away from the original number yields a non-zero result.
+Every floating-point operation incurs a {\em round-off error}\/ of $O(\eta)$
+which arises from the finite accuracy to which floating-point numbers
+are stored by the computer. Suppose that we use Euler's method
+to integrate our o.d.e.\ over an $x$-interval of order unity. This
+entails $O(h^{-1})$ integration steps, and, therefore, $O(h^{-1})$
+floating-point operations. If each floating-point operation incurs
+an error of $O(\eta)$, and the errors are simply cumulative, then
+the net round-off error is $O(\eta/h)$. 
+
+The total error, $\epsilon$, associated with
+integrating our o.d.e.\ over an $x$-interval of order unity is (approximately) 
+the 	sum of the truncation and round-off errors. Thus,
+for Euler's method,
+\begin{equation}
+\epsilon \sim \frac{\eta}{h} + h.
+\end{equation}
+Clearly, at large step-lengths the error is dominated by truncation error, whereas
+round-off error dominates at small step-lengths. The net error attains
+its minimum value, $\epsilon_0\sim \eta^{1/2}$, when $h=h_0\sim \eta^{1/2}$.
+There is clearly no point in making the step-length, $h$, any smaller than $h_0$,
+since this increases the number of floating-point operations but does
+not lead to an increase in the overall accuracy. It is also clear that the
+ultimate accuracy of Euler's method (or any other integration method) is
+determined by the accuracy, $\eta$, to which floating-point numbers are
+stored on the computer performing the calculation.
+
+The value of $\eta$ depends on how many bytes the computer
+hardware uses to store floating-point numbers. For
+IBM-PC clones, the appropriate value for {\em double precision}\/ floating
+point numbers is $\eta = 2.22\times 10^{-16}$ (this value is specified
+in the system header file {\tt float.h}). It follows that the minimum practical
+step-length for Euler's method on such a computer is $h_0\sim 10^{-8}$, yielding
+a minimum relative integration error of $\epsilon_0\sim 10^{-8}$. 	This
+level of accuracy is perfectly adequate for most scientific calculations. 
+Note, however, that the corresponding $\eta$ value for {\em single precision}\/
+floating-point numbers is only $\eta=1.19\times 10^{-7}$, yielding a minimum
+practical step-length and a minimum relative error for Euler's method of $h_0\sim 3\times
+10^{-4}$ and $\epsilon_0\sim 3\times 10^{-4}$, respectively. This level
+of accuracy is generally {\em not}\/ adequate for scientific calculations, which
+explains why such calculations are invariably performed using
+double, rather than single, precision floating-point numbers on IBM-PC clones
+(and most other types of computer).
+
+\section{Numerical Instabilities}
+Consider the following example. Suppose that our o.d.e.\ is
+\begin{equation}
+y' = - \alpha\,y,
+\end{equation}
+where $\alpha>0$, subject to the boundary condition
+\begin{equation}
+y(0) = 1.
+\end{equation}
+Of course, we can solve this problem analytically to give
+\begin{equation}
+y(x) = \exp(-\alpha\,x).
+\end{equation}
+Note that the solution is a {\em monotonically decreasing}\/ function of $x$. 
+We can also solve this problem numerically using Euler's method. Appropriate
+grid-points are
+\begin{equation}
+x_n = n\,h,
+\end{equation}
+where $n=0,1,2,\cdots$. Euler's method yields
+\begin{equation}
+y_{n+1} = (1-\alpha\,h)\,y_n.
+\end{equation}
+Note one curious fact. If $h>2/\alpha$ then $|y_{n+1}|> |y_n|$. 
+In other words, if the step-length is made too large then the numerical
+solution becomes an oscillatory  function of $x$ of 
+{\em monotonically increasing}\/ amplitude: 
+{\em i.e.}, the numerical solution {\em diverges}\/ from the actual
+solution. This type of catastrophic failure of a numerical integration
+scheme is called a {\em numerical instability}. All simple integration
+schemes become unstable if the step-length is made sufficiently large.
+
+\section{Runge-Kutta Methods}
+There are two main reasons why Euler's method is {\em not}\/ generally used in scientific computing.
+ Firstly, the truncation error per step associated with this method is far larger than
+those associated with other, more advanced, methods (for a given value of $h$). 
+Secondly, Euler's method  is too prone to numerical instabilities. 
+
+The  methods  most commonly employed  by scientists to integrate
+o.d.e.s were first developed by the German mathematicians C.D.T.~Runge and 
+M.W.~Kutta in the latter half of the nineteenth century.\footnote{{\em Numerical recipes in C: the
+art of scientific computing}, W.H.~Press, S.A.~Teukolsky, W.T.~Vettering, and
+B.R.~Flannery (Cambridge University Press, Cambridge UK, 1992), p.~710.}
+The basic reasoning behind so-called {\em Runge-Kutta}\/ methods is outlined in the
+following.
+
+The main reason that Euler's method has such a large truncation error per step is that in
+evolving the solution from $x_n$ to $x_{n+1}$  the method only evaluates
+derivatives at the beginning of the
+interval: {\em i.e.}, at $x_n$. The method is, therefore, very {\em asymmetric}\/ with
+respect to the beginning and the end of the interval. We can construct
+a more symmetric integration method by making an Euler-like trial step
+to the midpoint of the interval, and then using the values of both $x$ and
+$y$ at the midpoint to make the real step across the interval. To be more exact,
+\begin{eqnarray}
+k_1 &=& h\,f(x_n,y_n),\\[0.5ex]
+k_2 &=& h\,f(x_n+h/2, y_n+k_1/2),\\[0.5ex]
+y_{n+1}&=& y_n + k_2 + O(h^3).
+\end{eqnarray}
+As indicated in the error term, this symmetrization cancels out the
+first-order error, making the method {\em second-order}. In fact,
+the above method is generally known as a {\em second-order Runge-Kutta}\/ method. 
+Euler's method can be thought of as a first-order Runge-Kutta method.
+
+Of course, there is no need to stop at a second-order method. By using two
+trial steps per interval, it is possible to cancel out both the
+first and second-order error terms, and, thereby, construct a third-order
+Runge-Kutta method. Likewise, three trial steps per interval yield
+a fourth-order method, and so on.\footnote{{\em Handbook of mathematical functions}, M.~Abramowitz and I.A.~Stegun (Dover, New York NY, 1965), p.~896.}
+
+The general expression for the total error, $\epsilon$, associated with
+integrating our o.d.e.\ over an $x$-interval of order unity using an
+$n$th-order Runge-Kutta method is approximately
+\begin{equation}
+\epsilon \sim \frac{\eta}{h} + h^n.
+\end{equation}
+Here, the first term corresponds to round-off error, whereas the second term
+represents truncation error. The minimum 
+practical step-length, $h_0$, and the minimum error, $\epsilon_0$, take the values
+\begin{eqnarray}
+h_0 &\sim& \eta^{1/(n+1)},\\[0.5ex]
+\epsilon_0 &\sim& \eta^{n/(n+1)},
+\end{eqnarray}
+respectively.
+In Tab.~\ref{t1}, these values are tabulated against $n$ using 
+$\eta=2.22 \times 10^{-16}$
+(the value appropriate to double precision arithmetic on IBM-PC clones).
+It can be seen that  $h_0$ increases and $\epsilon_0$  decreases as $n$ gets larger. However, the relative
+change in these quantities
+ becomes progressively less dramatic as $n$ increases.
+ 
+\begin{table}\centering
+\begin{tabular}{|l|l|l|}\hline
+$n$ &$h_0$& $\epsilon_0$  \\[0.5ex]\hline
+1 &$1.5\times 10^{-8}$& $1.5\times 10^{-8}$  \\[0.5ex]
+2 &$6.1\times 10^{-6}$& $3.7\times 10^{-11}$ \\[0.5ex]
+3 &$1.2\times 10^{-4}$& $1.8\times 10^{-12}$ \\[0.5ex]
+4 &$7.4\times 10^{-4}$& $3.0\times 10^{-13}$ \\[0.5ex]
+5 &$2.4\times 10^{-3}$& $9.0\times 10^{-14}$ \\\hline
+\end{tabular}
+\caption{\em The minimum practical step-length, $h_0$, and minimum error, $\epsilon_0$, for an
+$n$th-order Runge-Kutta method integrating over a finite interval
+ using double precision arithmetic on an
+IBM-PC clone.}\label{t1}
+\end{table}
+
+In the majority of cases, the limiting factor when numerically integrating an
+o.d.e.\ is not round-off error, but rather the computational effort involved
+in calculating the function $f(x,y)$. Note that, in general, an $n$th-order
+Runge-Kutta method requires $n$ evaluations of this function per step. It can
+easily be appreciated that as $n$ is increased a point is quickly reached beyond which
+any benefits associated with the increased accuracy of a higher order
+method are more than offset by the computational ``cost'' involved in the
+necessary additional  evaluation of
+$f(x,y)$ per step. Although there is no hard and fast general rule, in most
+problems encountered in computational physics this point corresponds to $n=4$. In other words,
+in most situations of interest a {\em fourth-order Runge Kutta}\/ 
+integration method represents an appropriate compromise between
+the competing requirements of a low truncation error per step and a low computational
+cost per step.
+
+
+The standard {\em fourth-order Runge-Kutta} method takes the form:
+\begin{eqnarray}
+k_1 &=& h\,f(x_n,y_n),\label{e1.38}\\[0.5ex]
+k_2 &=& h\,f(x_n+h/2, y_n+k_1/2),\\[0.5ex]
+k_3 &=& h\,f(x_n+h/2, y_n+k_2/2),\\[0.5ex]
+k_4 &=& h\,f(x_n+h, y_n+k_3),\\[0.5ex]
+y_{n+1} &=& y_n + \frac{k_1}{6}+\frac{k_2}{3} +\frac{k_3}{3}+\frac{k_4}{6}
++O(h^5).\label{e1.42}
+\end{eqnarray}
+This is the method which we shall use, throughout this course, to integrate 
+first-order o.d.e.s.
+The generalization of this method to deal with systems of coupled first-order
+ o.d.e.s is (hopefully) fairly obvious.
+
+\section{An Example Fixed-Step RK4 routine}
+Listed below is an example fixed-step, fourth-order Runge-Kutta (RK4) integration
+routine which utilizes the {\tt Blitz++} library (see Sect.~\ref{blitz}).
+{\small\begin{verbatim}
+// rk4_fixed.cpp 
+
+/*
+  Function to advance set of coupled first-order o.d.e.s by single step
+  using fixed step-length fourth-order Runge-Kutta scheme
+
+     x        ... independent variable
+     y        ... array of dependent variables 
+     h        ... fixed step-length
+
+  Requires right-hand side routine
+  
+     void rhs_eval (double x, Array<double,1> y, Array<double,1>& dydx)
+	
+  which evaluates derivatives of y (w.r.t. x) in array dydx
+*/
+
+#include <blitz/array.h>
+
+using namespace blitz;
+
+void rk4_fixed (double& x, Array<double,1>& y, 
+                void (*rhs_eval)(double, Array<double,1>, Array<double,1>&), 
+                double h)
+{
+  // Array y assumed to be of extent n, where n is no. of coupled
+  // equations
+  int n = y.extent(0);
+
+  // Declare local arrays
+  Array<double,1> k1(n), k2(n), k3(n), k4(n), f(n), dydx(n);
+
+  // Zeroth intermediate step 
+  (*rhs_eval) (x, y, dydx);
+  for (int j = 0; j < n; j++)
+    {
+      k1(j) = h * dydx(j);
+      f(j) = y(j) + k1(j) / 2.;
+    }
+
+  // First intermediate step 
+  (*rhs_eval) (x + h / 2., f, dydx);
+  for (int j = 0; j < n; j++)
+    {
+      k2(j) = h * dydx(j);
+      f(j) = y(j) + k2(j) / 2.;
+    }
+
+  // Second intermediate step
+  (*rhs_eval) (x + h / 2., f, dydx);
+  for (int j = 0; j < n; j++)
+    {
+      k3(j) = h * dydx(j);
+      f(j) = y(j) + k3(j);
+    }
+
+  // Third intermediate step 
+  (*rhs_eval) (x + h, f, dydx);
+  for (int j = 0; j < n; j++)
+    {
+      k4(j) = h * dydx(j);
+    }
+
+  // Actual step 
+  for (int j = 0; j < n; j++)
+    {
+      y(j) += k1(j) / 6. + k2(j) / 3. + k3(j) / 3. + k4(j) / 6.;
+    }
+  x += h;
+
+  return;
+}
+\end{verbatim}}
+
+\section{An Example Calculation}
+Consider the following system of o.d.e.s:
+\begin{eqnarray}
+\frac{dx}{dt} &=& v,\\[0.5ex]
+\frac{dv}{dt}&=& -k\,x,
+\end{eqnarray}
+subject to the initial conditions $x(0)=0$ and $v(0) = \sqrt{k}$ at $t=0$. In fact,
+this system can be solved analytically to give
+\begin{equation}
+x = \sin(\sqrt{k}\,t).
+\end{equation}
+Let us compare the above solution with that obtained numerically using either Euler's method
+or a fourth-order Runge-Kutta method. Figure~\ref{f2x} shows the integration errors
+associated with these two methods (calculated by integrating the above system, with $k=1$,
+from $t=0$ to $t=10$, and then taking the difference between the numerical and analytic
+solutions) plotted against the step-length, $h$, in a log-log graph. All calculations
+are performed to {\em single precision}: {\em i.e.}, by using {\tt float}, rather
+than {\tt double}, variables. It can be seen that at large values of $h$, the error associated
+with Euler's method becomes much greater than unity ({\em i.e.}, the magnitude of the
+numerical solution greatly exceeds that of the analytic solution), indicating the
+presence of a {\em numerical instability}. There are no similar signs of  instability
+ associated with the Runge-Kutta method. At intermediate $h$, the
+error associated with Euler's method decreases smoothly like $h^{-1}$: in this regime, the
+dominant error is {\em truncation error}, which is expected to scale like $h^{-1}$ for a first-order
+method. The error associated with the Runge-Kutta method similarly scales like $h^{-4}$---as
+ expected for a fourth-order scheme---in the
+truncation error dominated regime. Note that, as $h$ is decreased,  the error associated with both
+methods eventually starts to rise in a jagged curve that scales roughly like $h^1$. This
+is a manifestation of {\em round-off error}. The minimum error associated with both methods
+corresponds to the boundary between the truncation error and round-off error dominated
+regimes. Thus, for Euler's method the minimum error is about $10^{-3}$ at $h\sim 10^{-3}$,
+whereas for the Runge-Kutta method the minimum error is about $10^{-5}$ at $h\sim 10^{-1}$.
+Clearly, the performance of the Runge-Kutta method is vastly superior to that of Euler's method,
+since the former method is capable of attaining much greater accuracy  than the latter
+using a far smaller number
+of steps ({\em i.e.}, a far larger $h$).
+
+\begin{figure}
+\epsfysize=3in
+\centerline{\epsffile{Chapter03/float.eps}}
+\caption{\em Global integration errors associated with Euler's method (solid curve) and a
+fourth-order Runge-Kutta method (dotted curve) plotted
+against the step-length $h$. Single precision calculation.}\label{f2x}
+\end{figure}
+
+Figure~\ref{f3x} displays similar data to that shown in Fig.~\ref{f2x}, except that now all 
+of the calculations
+are performed to {\em double precision}. The figure exhibits the same broad features as
+those apparent in  Fig.~\ref{f2x}. The major difference is that the round-off error has
+been reduced by about nine orders of magnitude, allowing the Runge-Kutta method to
+attain a minimum error of about $10^{-12}$ (see Tab.~\ref{t1})---a remarkably performance!
+
+\begin{figure}
+\epsfysize=3in
+\centerline{\epsffile{Chapter03/double.eps}}
+\caption{\em Global integration errors associated with Euler's method (solid curve) and a
+fourth-order Runge-Kutta method (dotted curve) plotted
+against the step-length $h$. Double precision calculation.}\label{f3x}
+\end{figure}
+
+Figures \ref{f2x} and \ref{f3x} illustrate why scientists rarely use Euler's method, or single
+precision numerics, to integrate systems of o.d.e.s.
+
+\section{Adaptive Integration Methods}
+Consider the following system of o.d.e.s:
+\begin{eqnarray}
+\frac{dx}{dt} &=& v,\\[0.5ex]
+\frac{dv}{dt} &=& \frac{v}{t} - 4\,k\,t^2\,x,
+\end{eqnarray}
+subject to the boundary conditions $x = \sqrt{k}\,\nu^2$ and $v = 2\,\sqrt{k}\,\nu$
+at $x=\nu$, where $0<\nu\ll 1$. This system can be solved
+analytically to give
+\begin{equation}
+x = \sin(\sqrt{k}\,t^2).
+\end{equation}
+One peculiarity of the above solution is that its  variation scale-length {\em decreases rapidly}
+as $t$ increases.
+
+\begin{figure}
+\epsfysize=3in
+\centerline{\epsffile{Chapter03/fixed.eps}}
+\caption{\em Global integration error associated with a
+fixed step-length ($h=0.01$), fourth-order Runge-Kutta method,  plotted
+against the independent variable, $t$, for a system of o.d.e.s
+in which the variation scale-length decreases rapidly with
+increasing $t$.  Double precision calculation.}\label{f4x}
+\end{figure}
+
+Let us compare the above solution with that obtained numerically using 
+a fourth-order Runge-Kutta method. Figure~\ref{f4x} shows the integration error
+associated with such a method (calculated by integrating the above system, with $k=10$,
+from $t=10^{-3}$ to $t=t$, and then taking the difference between the numerical and analytic
+solutions) with a fixed step-length of $h=0.01$,  plotted against the independent variable, $t$.
+It can be seen that, although the error starts off small, it rises rapidly as the
+variation scale-length of the solution decreases ({\em i.e.}, as $t$ increases), and
+quickly becomes unacceptably large. Of course, we could reduce the error by simply reducing
+the step-length, $h$. However, this is a very inefficient solution. The step-length
+only needs to be reduced at large $t$. There is no need to reduce it, at all,  at small $t$.
+Clearly, the ideal solution to this problem would be an integration method in which
+the step-length is {\em  varied}\/ so as to maintain a relatively constant truncation error
+per step. Such an {\em adaptive integration method}\/ would take large steps when variation
+scale-length of the solution was large, and {\em vice versa}.
+
+Let us investigate how we could convert our fixed step-length, fourth-order Runge-Kutta
+method into a corresponding adaptive method. First of all, we need an estimate of the
+truncation error at each step. Suppose that the current step-length is $h$. We can
+estimate the  truncation error, $\epsilon$, associated with
+the current step  by taking the difference between the solutions obtained by stepping
+by $h/2$ twice and by $h$ once (starting from the same point,
+in both cases). Let $\epsilon_0$ be the desired truncation
+error per step. How do we adjust $h$ so as to ensure that the truncation error
+associated with the next step is closer to this value? Observe, from Eq.~(\ref{e1.42}),
+that the truncation error per step in a fourth-order scheme scales like $h^5$. It
+follows, therefore, that our step-length adjustment formula should take the form\footnote{{\em Numerical recipes in C: the
+art of scientific computing}, W.H.~Press, S.A.~Teukolsky, W.T.~Vettering, and
+B.R.~Flannery (Cambridge University Press, Cambridge, England, 1992), p.~714.}
+\begin{equation}
+h_{\rm new} = h_{\rm old}\left|\frac{\epsilon_0}{\epsilon}\right|^{1/5}.
+\end{equation}
+According to this formula, the step-length should be increased if the truncation error
+per step is too small, and {\em vice versa}, in such a manner that the
+error per step remains relatively constant at $\epsilon_0$.  
+
+There are a number of caveats to the above discussion. In a system of $n$ coupled
+o.d.e.s, the overall truncation error per step, $\epsilon$,  should, of course, be some appropriately
+weighted average of the errors associated with each equation. There is also a question
+of whether $\epsilon$ should be an {\em absolute error}\/ or a {\em relative error}. The
+relative error associated with the $i$th equation is simply the absolute error
+divided by $|y_i|$, where $y_i$ is the current value of the $i$th dependent variable.
+An absolute error estimate is appropriate to a system of equations in which the amplitudes
+of the various dependent variables remain bounded. A relative error estimate
+is appropriate to a system in which the amplitudes of the dependent variables blow-up at some point, but 
+the variables always
+remain the same sign. Finally, a {\em mixed error}\/ estimate---usually the minimum of the
+absolute and relative errors---is appropriate to a system in which the amplitudes of the dependent variables blow-up at some point, but 
+the signs of the variables oscillate. It is usually a good idea to place some
+limits on the allowed variation of the step-length from step to step: {\em e.g.}, by preventing
+the step-length from increasing or decreasing by more than some factor $S>1$ per step. This
+prevents $h$ from oscillating unduly about its optimum value. Obviously, if $h$ becomes
+absurdly small then the integration method has failed, and should abort with an
+appropriate error message. Finally, a limit should be placed on how
+large $h$ can become---unfortunately, adaptive methods have a tendency to become a little
+over optimistic when integration is easy.   
+
+\begin{figure}
+\epsfysize=3in
+\centerline{\epsffile{Chapter03/adaptive.eps}}
+\caption{\em Global integration errors associated with a
+fixed step-length ($h=0.01$), fourth-order Runge-Kutta method (solid curve) and
+a corresponding adaptive method ($\epsilon_0=10^{-8}$)(dotted curve),  plotted
+against the independent variable, $t$, for a system of o.d.e.s
+in which the variation scale-length decreases rapidly with
+increasing $t$.  Double precision calculation.}\label{f5x}
+\end{figure}
+
+ Figure~\ref{f5x} shows the integration errors
+associated with a fixed step-length, fourth-order Runge-Kutta
+method and a corresponding adaptive method---con\-structed
+along the lines discussed above---as functions of
+the independent variable, $t$.   The errors are
+calculated by integrating the current system, with $k=10$,
+from $t=10^{-3}$ to $t=t$, and then taking the difference between the numerical and analytic
+solutions. The fixed step-length associated with the former method is $h=0.01$. The desired
+truncation error per step associated with the latter is $\epsilon_0=10^{-8}$. It
+can be seen that the performance of the adaptive method is far
+superior to that of the fixed step-length method, since the former method
+maintains a relatively constant integration error as the variation scale-length
+of the solution decreases ({\em i.e.}, as $t$ increases). Figure~\ref{f6x} illustrates how this is achieved. 
+This figure shows the step-length, $h$, associated with the adaptive method as a function of $t$.
+It can be seen that the adaptive method maintains a relatively constant
+truncation  error per step by decreasing
+$h$ as $t$ increases.
+
+\begin{figure}
+\epsfysize=3in
+\centerline{\epsffile{Chapter03/h.eps}}
+\caption{\em  The step-length, $h$, associated with the
+adaptive integration method shown in the previous figure, plotted as a function of the
+independent variable, $t$. 
+Double precision calculation.}\label{f6x}
+\end{figure}
+
+\section{An Example Adaptive-Step RK4 Routine}
+Listed below is an example adaptive-step RK4 routine which makes use of the previously
+listed fixed-step routine. Note that the routine recalculates all steps whose truncation
+error exceeds the desired value {\tt acc}.
+{\small\begin{verbatim}
+// rk4_adaptive.cpp 
+
+/*
+  Function to advance set of coupled first-order o.d.e.s by single step
+  using adaptive fourth-order Runge-Kutta scheme
+
+     x       ... independent variable
+     y       ... array of dependent variables
+     h       ... step-length
+     t_err   ... actual truncation error per step 
+     acc     ... desired truncation error per step
+     S       ... step-length cannot change by more than this factor from
+                  step to step
+     rept    ... number of step recalculations		  
+     maxrept ... maximum allowable number of step recalculations		  
+     h_min   ... minimum allowable step-length
+     h_max   ... maximum allowable step-length
+     flag    ... controls manner in which truncation error is calculated	
+
+  Requires right-hand side routine 
+
+        void rhs_eval (double x, Array<double,1> y, Array<double,1>& dydx)
+
+  which evaluates derivatives of y (w.r.t. x) in array dydx.
+
+  Function advances equations by single step whilst attempting to maintain 
+  constant truncation error per step of acc:
+
+    flag = 0 ... error is absolute
+    flag = 1 ... error is relative
+    flag = 2 ... error is mixed
+
+  If step-length falls below h_min then routine aborts
+*/
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <blitz/array.h>
+
+using namespace blitz;
+
+void rk4_fixed (double&, Array<double,1>&, 
+                void (*)(double, Array<double,1>, Array<double,1>&), 
+                double);
+
+void rk4_adaptive (double& x, Array<double,1>& y, 
+                   void (*rhs_eval)(double, Array<double,1>, Array<double,1>&),
+                   double& h, double& t_err, double acc, 
+                   double S, int& rept, int maxrept, 
+                   double h_min, double h_max, int flag)
+{
+  // Array y assumed to be of extent n,  where n is no. of coupled
+  // equations
+  int n = y.extent(0);
+
+  // Declare local arrays
+  Array<double,1> y0(n), y1(n);
+
+  // Declare repetition counter
+  static int count = 0;
+
+  // Save initial data
+  double x0 = x;
+  y0 = y;
+
+  // Take full step 
+  rk4_fixed (x, y, rhs_eval, h);
+
+  // Save data
+  y1 = y;
+
+  // Restore initial data 
+  x = x0;
+  y = y0;
+
+  // Take two half-steps 
+  rk4_fixed (x, y, rhs_eval, h/2.);
+  rk4_fixed (x, y, rhs_eval, h/2.);
+
+  // Calculate truncation error
+  t_err = 0.;
+  double err, err1, err2;
+  if (flag == 0)
+    {
+      // Use absolute truncation error 
+      for (int i = 0; i < n; i++)
+        {
+          err = fabs (y(i) - y1(i));
+          t_err = (err > t_err) ? err : t_err;
+        }
+    }
+  else if (flag == 1)
+    {
+      // Use relative truncation error
+      for (int i = 0; i < n; i++)
+        {
+          err = fabs ((y(i) - y1(i)) / y(i));
+          t_err = (err > t_err) ? err : t_err;
+        }
+    }
+  else 
+    {
+      // Use mixed truncation error 
+      for (int i = 0; i < n; i++)
+        {
+          err1 = fabs ((y(i) - y1(i)) / y(i));
+          err2 = fabs (y(i) - y1(i));
+          err = (err1 < err2) ? err1 : err2;
+          t_err = (err > t_err) ? err : t_err;
+        }
+    }
+
+  // Prevent small truncation error from rounding to zero
+  if (t_err == 0.) t_err = 1.e-15;
+
+  // Calculate new step-length 
+  double h_est = h * pow (fabs (acc / t_err), 0.2);
+
+  // Prevent step-length from changing by more than factor S
+  if (h_est / h > S)
+    h *= S;
+  else if (h_est / h < 1. / S)
+    h /= S;
+  else
+    h = h_est;
+
+  // Prevent step-length from exceeding h_max
+  h = (fabs(h) > h_max) ? h_max * h / fabs(h) : h;
+
+  // Abort if step-length falls below h_min
+  if (fabs(h) < h_min)
+    { 
+      printf ("Error - |h| < hmin\n");
+      exit (1);
+    }
+
+  // If truncation error acceptable take step 
+  if ((t_err <= acc) || (rept >= maxrept))
+    {  
+      rept = count;
+      count = 0;
+    }
+  // If truncation error unacceptable repeat step 
+  else 
+    {
+      count++;
+      x = x0;
+      y = y0;
+      rk4_adaptive (x, y, rhs_eval, h, t_err, acc, 
+                    S, rept, maxrept, h_min, h_max, flag);
+    }
+
+  return;
+}
+
+\end{verbatim}}
+
+\section{Advanced Integration Methods}
+Of course, Runge-Kutta methods are not the last word in integrating o.d.e.s. Far from
+it! Runge-Kutta methods are sometimes referred to as {\em single-step}\/ methods,
+since they evolve the solution from $x_n$ to $x_{n+1}$ without needing to
+know the solutions at $x_{n-1}$, $x_{n-2}$, {\em etc.}\ There is a broad
+class of more sophisticated integration methods, known as {\em multi-step}\/ methods,
+which utilize the previously calculated solutions at $x_{n-1}$, $x_{n-2}$, 
+{\em etc.}\
+in order to evolve the solution from  $x_n$ to $x_{n+1}$. Examples of these
+methods are the various Adams methods\footnote{{\em Numerical methods},
+R.W.~Hornbeck
+(Prentice-Hall, Englewood Cliffs NJ, 1975), p.~196.} and the various Predictor-Corrector
+methods.\footnote{{\em ibid},  p.~199.} The main advantages of
+Runge-Kutta methods are that they are easy to implement,  they are very stable,
+and  they are ``self-starting'' ({\em i.e.}, unlike muti-step methods, we do not
+have to treat the first few steps taken by a single-step integration method as special cases). 
+The primary disadvantages of Runge-Kutta methods are that they require significantly
+more computer time than multi-step methods of comparable accuracy, and 
+ they do not easily yield good {\em global}\/ estimates of the truncation error. However, for the straightforward
+dynamical systems under investigation in this course, the advantage of the relative simplicity and
+ease of use of Runge-Kutta methods far outweighs the disadvantage of their
+relatively high computational cost.
+
+\section{The Physics of Baseball Pitching}
+Baseball is the oldest professional sport in the U.S. It is
+a
+game of great subtlety (like cricket!)\ which has fascinated fans
+for over a hundred years. It has also fascinated physicists---partly, 
+because many physicists are avid baseball fans, but, partly,
+also, because there are clearly delineated physics principles at work in this game. Indeed,
+more books and papers have been written on the physics of baseball than on 
+ any
+other sport. 
+
+A baseball is formed by winding yarn  around a small sphere of cork.
+The ball is then covered with
+two interlocking pieces of white cowhide, which are tightly stitched together.
+The mass and circumference of a regulation baseball are 
+5\,oz and 9\,in ({\em i.e.}, about
+$150\,{\rm g}$ and $23\,{\rm cm}$), respectively.
+In the major leagues, the ball is pitched a distance of 60
+feet 6 inches ({\em i.e.}, $18.44$\,m), towards the hitter, at speeds
+which typically lie in the range 60 to 100 {\rm mph} ({\em i.e.}, about 30 to 45
+${\rm m/s}$). As is well-known to baseball fans,
+there are a surprising  variety of different pitches. ``Sliders'' deviate
+sideways through the air. ``Curveballs'' deviate sideways,
+but also dip unusually rapidly. Conversely, ``fastballs'' dip unusually slowly. 
+Finally, the mysterious ``knuckleball'' can
+ weave from side to side as it moves towards the hitter. How is all this
+bizarre behaviour possible? Let us investigate.
+
+\section{Air Drag}\label{s42}
+A baseball in flight is subject to three distinct forces. The first is {\em gravity}, which
+causes the ball to accelerate vertically downwards at $g=9.8\,{\rm m/s}^{-2}$. The
+second is {\em air drag}, which impedes the ball's motion through the air. The third
+is the {\em Magnus force}, which permits the ball to curve laterally. Let us
+discuss the latter two forces in more detail.
+
+As is well-known, the drag force  acting on  an object which moves  {\em very
+slowly}\/ through a viscous fluid is directly proportional to the speed 
+ of that object with respect to the fluid. For example, a sphere
+of radius $r$, moving with speed $v$ through a fluid whose coefficient of viscosity is $\eta$,
+ experiences a drag force given by Stokes' law:\footnote{{\em Methods
+of theoretical physics}, Vol.~II, P.M.~Morse, and H.~Feshbach, (McGraw-Hill, New York NY, 1953).}
+\begin{equation}
+f_D = 6\,\pi\,\eta\,r\,v.
+\end{equation}
+As students who have attempted to reproduce Millikan's oil drop experiment will
+recall, this force is the dominant drag force acting on a microscopic oil drop falling through air. 
+However, for most {\em macroscopic}\/ projectiles moving through air, the above force is dwarfed
+by a second drag force which is proportional to $v^2$. 
+
+The origin of this second force is fairly easy to understand. At velocities
+sufficiently low for Stokes' law to be valid,
+ air is able to flow smoothly around a passing projectile.
+However, at higher velocities,
+the projectile's motion is too rapid for this to occur. Instead, the projectile 
+effectively knocks the air out of its way. The total mass of air which the projectile comes into contact with per
+second is $\rho\,v\,A$, where $\rho$ is the air density, $v$  the
+projectile speed, and $A$ the projectile's cross-sectional area. 
+ Suppose, as seems reasonable,
+that the projectile imparts to this air mass a speed $v'$ which is directly
+proportional to $v$. The rate of momentum gain of the air, which is equal
+to the drag force acting on the projectile, is approximately
+\begin{equation}
+f_D =  \frac{1}{2}\,C_D(v)\,\rho\,A\,v^2,
+\end{equation}
+where the {\em drag coefficient}, $C_D(v)$, is a dimensionless quantity.
+
+The  drag force acting on a projectile, passing through air, always points in the {\em opposite}\/ 
+direction to the projectile's instantaneous direction of motion. Thus, the vector
+drag force takes the form
+\begin{equation}
+{\bf f}_D = -\frac{1}{2}\,C_D(v)\,\rho\,A\,v\,{\bf v}.\label{e1.8}
+\end{equation}
+
+When a projectile moves through air it leaves a {\em turbulent}\/ wake. The value of the
+drag coefficient, $C_D$, is closely related to the properties of this wake. Turbulence
+in fluids is conventionally characterized in terms of a dimensionless quantity known
+as a {\em Reynolds number}:\footnote{R.E.~Reynolds, Phil.\ Trans.\ Roy.\ Soc.\ {\bf 174}, 935 (1883).}
+\begin{equation}
+R_e = \frac{\rho\,v\,d}{\eta}.
+\end{equation}
+Here, $d$ is the typical length-scale  ({\em e.g.}, the diameter) of the projectile. For sufficiently small Reynolds
+numbers, the air flow immediately above the surface of the projectile remains smooth,
+despite the presence of the turbulent wake,
+and $C_D$ takes an approximately constant value which depends on the projectile's
+shape. However, above
+a certain critical value of $R_e$---which corresponds to $2\times 10^5$ for
+a {\em smooth}\/ projectile---the air flow immediately above the surface of the projectile
+becomes turbulent, and the drag coefficient drops: {\em i.e.}, a projectile
+slips more easily through the air when the surrounding flow is completely
+turbulent. In this high Reynolds number regime, the drag coefficient generally falls
+rapidly by a factor of between 3 and 10, as $R_e$ is increased, and then settles
+down to a new, roughly constant value. Note that
+the critical Reynolds number is significantly less than $2\times 10^5$ for
+projectiles with rough surfaces. Paradoxically, a rough projectile generally experiences
+less air drag, at high velocities, than a smooth one. The typical dependence of the
+drag coefficient on the Reynolds number is illustrated schematically in Fig.~\ref{fcd}.
+
+\begin{figure}
+\epsfysize=3in
+\centerline{\epsffile{Chapter03/cd.eps}}
+\caption{\em Typical dependence of the drag coefficient, $C_D$, on the Reynolds number, $R_e$.}\label{fcd}
+\end{figure}
+
+ Wind tunnel measurements reveal that the drag coefficient is a strong
+function of speed for baseballs, as illustrated in Fig.~\ref{fbaseball}.
+At low speeds, the drag coefficient is approximately constant. However, as
+the speed increases, $C_D$ drops substantially, and is more than a factor of
+2 smaller at high speeds. This behaviour is similar to that described above.
+The sudden drop in the drag coefficient is triggered by a transition from laminar
+to turbulent flow in the air layer immediately above the ball's surface.
+The critical speed (to be more exact, the critical
+Reynolds number) at which this transition occurs depends on the properties of
+the surface. Thus, for a completely smooth baseball the transition occurs at
+speeds well beyond the capabilities of the fastest pitchers. Conversely,
+the transition takes place at comparatively low speeds if the surface
+of the ball is rough. In fact, the raised stitches on the otherwise smooth regulation baseball
+cause the transition to occur at an intermediate speed which is
+ easily  within the range
+of major league pitchers. Note that the magnitude of the drag force is substantial---it
+actually exceeds the force due to gravity for ball speeds above about 95\,mph.
+
+\begin{figure}
+\epsfysize=2.75in
+\centerline{\epsffile{Chapter03/baseball.eps}}
+\caption{\em Variation of the drag coefficient, $C_D$, with speed, $v$, for
+normal, rough, and smooth baseballs. From 
+{\em The physics of baseball}, R.K.~Adair (Harper \& Row, New York NY, 1990). }\label{fbaseball}
+\end{figure}
+
+The above discussion leads to a number of interesting observations. First, the raised stitches
+on a baseball have an important influence on its aerodynamic properties. Without
+them, the air drag acting on the ball at high speeds would increase substantially. Indeed, it
+seems unlikely that major league pitchers could throw 95\,mph fastballs if baseballs
+were completely smooth. On the other hand, a scuffed-up baseball experiences even less
+air drag than a regulation ball. Presumably, such a ball can be thrown faster---which explains why
+balls are so  regularly renewed  in major league games.
+
+Giordano\footnote{{\em Computational physics}, N.J.~Giordano, (Prentice-Hall, Upper Saddle River
+NJ, 1997).} has developed the following useful formula which quantifies the drag force
+acting on a baseball:
+\begin{equation}
+\frac{{\bf f}_D}{m} = -F(v)\,v\,{\bf v},
+\end{equation}
+where
+\begin{equation}
+F(v) = 0.0039 + \frac{0.0058}{1+{\rm exp}[(v-v_d)/{\mit\Delta}]}.
+\end{equation}
+Here, $v_d = 35\,{\rm m/s}$ and ${\mit\Delta} = 5\,{\rm m/s}$. 
+
+
+\section{The Magnus Force}
+We  have not yet explained how a baseball is able to {\em curve}\/ 
+through the air. 
+Physicists in the last century could not account for this effect, and actually
+tried to dismiss it as an ``optical illusion.''\@
+It turns out that this strange phenomenon is
+associated with the fact that the balls thrown in major league
+games  tend to {\em spin}\/ fairly rapidly---typically, at 1500\,rpm.
+
+The origin of the force which makes a spinning baseball curve can
+readily be appreciated once we recall that the drag force acting on a
+baseball increases with increasing speed.\footnote{Although the drag
+coefficient, $C_D$, decreases with increasing speed,  the drag
+force, which is proportional to $C_D\,v^2$, always increases.}
+For a ball spinning about an axis perpendicular to its direction of travel, the
+speed of the ball, relative to the air, is {\em different}\/ on opposite
+sides of the ball, as illustrated in Fig.~\ref{fmagnus}. It can
+be seen, from the diagram, that the lower side of the ball has a larger
+speed relative to the air than the upper side. This results in a larger drag force
+acting on the lower surface of the ball than on the upper surface. If we think of
+drag forces as exerting a sort of pressure on the ball then we can readily
+appreciate that when the unequal drag forces acting on the ball's upper and lower surfaces
+are added together there is a component of the resultant force acting {\em upwards}. This force---which
+is known as the {\em Magnus force}, after the German physicist Heinrich~Magnus,
+who first described it in 1853---is the dominant spin-dependent force
+acting on baseballs. The Magnus force can be written
+\begin{equation}\label{emagnus}
+{\bf f}_M = S(v)\,{\bf \omega}\times{\bf v},
+\end{equation}
+where ${\bf \omega}$ is the  angular velocity vector  of the ball. According to
+Adair and Giordano, it is a fairly good approximation to take
+\begin{equation}
+B= \frac{S}{m} = 4.1\times 10^{-4}
+\end{equation}
+for baseballs. Note that $B$ is a dimensionless quantity. The magnitude
+of the Magnus force is about one third of the force due to gravity for
+typical curveballs.
+
+\begin{figure}
+\epsfysize=2.75in
+\centerline{\epsffile{Chapter03/magnus.eps}}
+\caption{\em Origin of the Magnus force for a ball of radius $r$, moving with
+speed $v$, and spinning with angular velocity $\omega$ about an axis
+perpendicular to its direction of motion. }\label{fmagnus}
+\end{figure}
+
+\section{Simulations of Baseball Pitches}
+Let us adopt a set of coordinates such that $x$ measures displacement from
+the pitcher to the hitter, $y$ measures horizontal displacement (a displacement
+in the $+y$ direction corresponds to a displacement to the hitter's right-hand
+side), and $z$ measures vertical displacement (a displacement
+in the $+z$ direction corresponds to an upward displacement). Using these
+coordinates, the equations of motion of a baseball can be written as the
+following set of coupled first-order o.d.e.s:
+\begin{eqnarray}
+\frac{dx}{dt} &=& v_x,\\[0.5ex]
+\frac{dy}{dt} &=& v_y,\\[0.5ex]
+\frac{dz}{dt} &=& v_z,\\[0.5ex]
+\frac{dv_x}{dt} &=& - F(v)\,v\,v_x + B\,\omega\,(v_z\,\sin\phi-v_y\,\cos\phi),\\[0.5ex]
+\frac{dv_y}{dt} &=& - F(v)\,v\,v_y + B\,\omega\,v_x\,\cos\phi,\\[0.5ex]
+\frac{dv_z}{dt} &=& -g - F(v)\,v\,v_z - B\,\omega\,v_x\,\sin\phi.
+\end{eqnarray}
+Here,  the ball's angular velocity vector has been written
+${\bf \omega} = \omega\,(0,\sin\phi,\cos\phi)$. 
+Appropriate boundary conditions at $t=0$ are:
+\begin{eqnarray}
+x(t=0) &=& 0,\\[0.5ex]
+y(t=0) &=& 0,\\[0.5ex]
+z(t=0) &=& 0,\\[0.5ex]
+v_x(t=0) &=& v_0\,\cos\theta\\[0.5ex]
+v_y(t=0) &=& 0,\\[0.5ex]
+v_z(t=0) &=& v_0\,\sin\theta,
+\end{eqnarray}
+where $v_0$ is the initial speed of the pitch, and $\theta$ is its initial
+angle of elevation. Note that, in writing the above equations, we are
+neglecting any decrease in the ball's rate of spin as it moves towards the hitter.
+
+The above set of equations have been solved numerically using a fixed step-length, fourth-order
+Runge-Kutta method. The step-length, {\tt h}, is conveniently expressed as a fraction of the
+pitch's  estimated
+time-of-flight, $T = l/v_0$, where $l=18.44\,{\rm m}$ is the horizontal
+distance between the pitcher and the hitter. Thus, {\tt 1/h} is approximately the number
+of steps used to integrate the trajectory. 
+
+It is helpful, at this stage, to describe the conventional classification of baseball
+pitches in terms of the  direction of the ball's
+axis of spin. Figure~\ref{fpitch} shows the direction of rotation of
+various different pitches thrown by a right-handed
+pitcher, as seen by the hitter. Obviously, the directions are reversed for the
+corresponding pitches thrown by a left-handed pitcher. Note, from Eq.~(\ref{emagnus}),
+that the arrows in Fig.~\ref{fpitch} show both the direction of the ball's spin and
+the direction of the Magnus force. 
+
+\begin{figure}
+\epsfysize=2.25in
+\centerline{\epsffile{Chapter03/pitch.eps}}
+\caption{\em Rotation direction, as seen by hitter, for various 
+pitches thrown by a  right-handed pitcher. The arrow shows the direction of
+rotation, which is also the direction of the Magnus force. From
+{\em The physics of baseball}, R.K.~Adair (Harper \& Row, New York NY, 1990).}\label{fpitch}
+\end{figure}
+
+Figure~\ref{fslider} shows the numerical trajectory of a ``slider'' delivered
+by a right-handed pitcher. The ball is thrown such that its axis
+of rotation points vertically upwards, which is the direction of spin generated by
+ the natural clockwise (seen from below) rotation of a right-handed pitcher's wrist.
+The associated Magnus force causes the
+ball to curve sideways, {\em away}\/ from a right-handed hitter ({\em i.e.}, in the
+$+y$-direction). As can be seen, from the figure, the sideways displacement 
+for an 85\,mph pitch spinning at
+1800\,rpm  is over 1 foot. Of course, a slider delivered
+by a left-handed pitcher would curve {\em towards}\/ a right-handed hitter.
+It turns out that pitches which curve towards a hitter are far harder to
+hit  than pitches which curve away. Thus, a right-handed
+hitter is at a distinct disadvantage when facing a left-handed pitcher, and
+{\em vice versa}. A lot of strategy in  baseball games is
+associated with teams trying to match the handedness of hitters and
+pitchers so as to gain an advantage over their opponents.
+
+\begin{figure}
+\epsfysize=3.5in
+\centerline{\epsffile{Chapter03/sliderr.eps}}
+\caption{\em Numerical trajectory of a slider delivered by a
+right-handed pitcher. The solid and dashed curves show the vertical
+and horizontal displacements of the ball, respectively. The
+parameters for this pitch are $v_0=85$\,mph, $\theta = 1^\circ$, $\omega
+=1800$\,rpm, $\phi = 0^\circ$, and ${\tt h}=1\times 10^{-4}$. 
+The ball passes over the plate at $76\,mph$ about $0.52$ seconds after
+it is released by the pitcher.}\label{fslider}
+\end{figure}
+
+Figure~\ref{fslider} shows the numerical trajectory of a ``curveball'' delivered
+by a right-handed pitcher. The ball is thrown such that its
+axis of rotation, as seen by the hitter,
+ points upwards, but also {\em tilts}\/ to the right. The hand action
+associated with throwing  a curveball is actually somewhat more natural than that associated
+with  a slider. The Magnus force acting on a curveball
+causes the ball to deviate both sideways and {\em downwards}. Thus, although a curveball
+generally does not move laterally  as far as a slider, it dips unusually rapidly---which
+makes it difficult to hit. The anomalously large dip of a typical curveball is apparent from
+a comparison of Figs.~\ref{fslider} and \ref{fcurve}.
+
+\begin{figure}
+\epsfysize=3.5in
+\centerline{\epsffile{Chapter03/curver.eps}}
+\caption{\em Numerical trajectory of a curveball delivered by a
+right-handed pitcher. The solid and dashed curves show the vertical
+and horizontal displacements of the ball, respectively. The
+parameters for this pitch are $v_0=85$\,mph, $\theta = 1^\circ$, $\omega
+=1800$\,rpm, $\phi = 45^\circ$, and ${\tt h}=1\times 10^{-4}$. 
+The ball passes over the plate at $76\,mph$ about $0.52$ seconds after
+it is released by the pitcher.}\label{fcurve}
+\end{figure}
+
+As we have already mentioned, a pitch which curves towards a hitter is harder to
+hit than one which curves away. It is actually possible for a right-handed
+pitcher to throw  an inward curving pitch to a right-handed hitter. Such a
+pitch is known as a ``screwball.''\@ Unfortunately, throwing  screwballs involves
+a completely unnatural wrist rotation which is extremely difficult to master.
+Figure~\ref{fscrew} shows the  numerical trajectory of a screwball delivered
+by a right-handed pitcher. The ball is thrown such that its
+axis of rotation, as seen by the hitter,
+ points upwards and tilts to the {\em left}. Note that the pitch dips
+rapidly---like a curveball---but has a sideways displacement in the {\em opposite}\/
+direction to normal.
+
+\begin{figure}
+\epsfysize=3.5in
+\centerline{\epsffile{Chapter03/screwballr.eps}}
+\caption{\em Numerical trajectory of a screwball delivered by a
+right-handed pitcher. The solid and dashed curves show the vertical
+and horizontal displacements of the ball, respectively. The
+parameters for this pitch are $v_0=85$\,mph, $\theta = 1^\circ$, $\omega
+=1800$\,rpm, $\phi = 135^\circ$, and ${\tt h}=1\times 10^{-4}$. 
+The ball passes over the plate at $76\,mph$ about $0.52$ seconds after
+it is released by the pitcher.}\label{fscrew}
+\end{figure}
+
+Probably the most effective pitch in baseball is the so-called ``fastball.''\@
+As the name suggests, a fastball is thrown extremely rapidly---typically,
+at $95\,$mph. The natural hand action associated with throwing this
+type of pitch tends to impart a significant amount of {\em backspin}\/ to the
+ball. Thus, the Magnus force acting on a fastball  has a large
+upwards component, slowing the ball's rate of fall.
+ Figure~\ref{ffast} shows the  numerical trajectory of a fastball delivered
+by a right-handed pitcher. The ball is thrown such that its
+axis of rotation, as seen by the hitter,
+ points {\em  downwards}\/ and tilts to the  left. 
+Note that the pitch falls an unusually small distance. This is partly because the ball takes
+less time than normal to reach the hitter, but partly also because the Magnus force has a
+substantial upward component. This type of pitch is often called
+a ``rising fastball,'' because hitters often claim that the ball rises
+as it moves towards them. Actually, this is
+an optical illusion created by the ball's smaller than expected rate of fall.
+
+\begin{figure}
+\epsfysize=3.5in
+\centerline{\epsffile{Chapter03/fastballr.eps}}
+\caption{\em Numerical trajectory of a fastball delivered by a
+right-handed pitcher. The solid and dashed curves show the vertical
+and horizontal displacements of the ball, respectively. The
+parameters for this pitch are $v_0=95$\,mph, $\theta = 1^\circ$, $\omega
+=1800$\,rpm, $\phi = 225^\circ$, and ${\tt h}=1\times 10^{-4}$. 
+The ball passes over the plate at $86\,mph$ about $0.46$ seconds after
+it is released by the pitcher.}\label{ffast}
+\end{figure}
+
+\section{The Knuckleball}
+Probably the most entertaining pitch in baseball is  the so-called  ``knuckleball.''\@
+Unlike the other types of pitch we have encountered, knuckleballs are low
+speed pitches (typically, 65\,mph) in which the ball is purposely
+thrown with as little spin as possible. It turns out that knuckleballs are hard to
+hit because they have unstable trajectories which shift from side to
+side in a highly unpredictable manner. How is this possible?
+
+Suppose that a moving ball is not spinning at all, and is orientated such that
+one of its stitches is exposed on one side, whereas the other side is smooth.
+It follows, from Fig.~\ref{fbaseball}, that the drag force on the smooth side
+of the ball is greater than that on the stitch side. Hence, the ball experiences
+a lateral force in the direction of the exposed stitch. Suppose, now,
+that the ball is rotating slowly as it moves towards the hitter. As the ball
+moves forward its orientation changes, and the exposed stitch  shifts from side to side, giving rise to
+a lateral force which also shifts from side to side. Of course, if the ball
+is rotating sufficiently rapidly then the oscillations in the lateral force 
+average out. However, for a slowly rotating ball these oscillations can profoundly
+affect the ball's trajectory. 
+
+Watts and Sawyer\footnote{{\em Aerodynamics of a knuckleball}, R.G.~Watts, and
+E.~Sawyer, Am.\ J.\ of Phys.\ {\bf 43}, 960 (1975).} have
+performed wind tunnel measurements of
+ the lateral force acting on a baseball as a function of its angular orientation.
+Note that the stitches on a baseball pass any given point {\em four}\/ times for each
+complete revolution of the ball about an axis passing  through its centre.
+Hence, we expect the lateral force  to exhibit four maxima and four
+minima as the ball is rotated once. This is exactly what Watts and Sawyer observed.
+For the case of a 65\,mph knuckleball, Giordano has extracted the following
+useful expression for the lateral force, as a function of  angular orientation, $\varphi$,
+from Watts and Sawyer's data:
+\begin{equation}
+\frac{f_y}{m\,g} = G(\varphi) = 0.5\left[\sin(4\varphi) - 0.25\,\sin(8\varphi) + 0.08\,\sin(12\varphi)-
+0.025\,\sin(16\varphi)\right].
+\end{equation}
+The function $G(\varphi)$ is plotted in Fig.~\ref{fglat}. Note the very rapid changes in this
+function in certain narrow ranges of $\varphi$. 
+
+\begin{figure}
+\epsfysize=3.5in
+\centerline{\epsffile{Chapter03/glatr.eps}}
+\caption{\em The lateral force function, $G(\varphi)$, for a
+65\,mph knuckleball.}\label{fglat}
+\end{figure}
+
+
+Using the above expression, the equations of motion of a knuckleball
+can be written as the following set of coupled first-order o.d.e.s:
+\begin{eqnarray}
+\frac{dx}{dt} &=& v_x,\\[0.5ex]
+\frac{dy}{dt} &=& v_y,\\[0.5ex]
+\frac{dz}{dt} &=& v_z,\\[0.5ex]
+\frac{dv_x}{dt} &=& - F(v)\,v\,v_x,\\[0.5ex]
+\frac{dv_y}{dt} &=& - F(v)\,v\,v_y  + g\,G(\varphi),\\[0.5ex]
+\frac{dv_z}{dt} &=& -g - F(v)\,v\,v_z.\\[0.5ex]
+\frac{d\varphi}{dt} &=& \omega.
+\end{eqnarray}
+Note that we have added an equation of motion for the angular orientation, $\varphi$, of the
+ball, which  is assumed to rotate at a fixed angular velocity, $\omega$, about a vertical
+axis. Here, we are neglecting the Magnus force, which is expected to be negligibly small
+for a slowly spinning pitch.
+ Appropriate boundary conditions at $t=0$ are:
+\begin{eqnarray}
+x(t=0) &=& 0,\\[0.5ex]
+y(t=0) &=& 0,\\[0.5ex]
+z(t=0) &=& 0,\\[0.5ex]
+v_x(t=0) &=& v_0\,\cos\theta\\[0.5ex]
+v_y(t=0) &=& 0,\\[0.5ex]
+v_z(t=0) &=& v_0\,\sin\theta,\\[0.5ex]
+\varphi(t=0) &=& \varphi_0,
+\end{eqnarray}
+where $v_0$ is the initial speed of the pitch, $\theta$ is the pitch's  initial
+angle of elevation, and $\varphi_0$ is the ball's initial angular orientation.
+
+The above set of equations have been solved numerically using a fixed step-length, fourth-order
+Runge-Kutta method. The step-length, {\tt h}, is conveniently expressed as a fraction of the
+pitch's  estimated
+time-of-flight, $T = l/v_0$, where $l=18.44\,{\rm m}$ is the horizontal
+distance between the pitcher and the hitter. Thus, {\tt 1/h} is approximately the number
+of steps used to integrate the trajectory. 
+
+\begin{figure}
+\epsfysize=3.5in
+\centerline{\epsffile{Chapter03/knuckler.eps}}
+\caption{\em Numerical trajectories of  knuckleballs with the same
+angular velocity but different initial orientations. The solid, dotted, long-dashed, and short-dashed
+curves show the horizontal displacement of the ball for $\varphi_0 = 0^\circ$,
+$22.5^\circ$, $45^\circ$, and $67.5^\circ$, respectively. The
+other parameters for this pitch are $v_0=65$\,mph, $\theta = 4^\circ$, $\omega
+=20$\,rpm, and ${\tt h}=1\times 10^{-4}$. 
+The ball passes over the plate at $56\,mph$ about $0.69$ seconds after
+it is released by the pitcher. The ball rotates about $83^\circ$ whilst it is
+in the air.
+ }\label{fknuckle}
+\end{figure}
+
+Figure~\ref{fknuckle} shows the lateral displacement of a set of four knuckleballs
+thrown with the same rate of spin, $\omega = 20$\,rpm, but starting with  different
+angular orientations. Note the striking difference between
+the various trajectories shown in this figure. Clearly, even a fairly small change in the
+initial orientation of the ball translates into a large change in its
+subsequent trajectory through the air. For this reason, knuckleballs are extremely
+unpredictable---neither the pitcher, the hitter, nor the catcher can be really
+sure where one of these pitches is going to end up. Needless to say,
+baseball teams always put their best catcher behind the plate when a
+knuckleball pitcher is on the mound!
+
+\begin{figure}
+\epsfysize=3.5in
+\centerline{\epsffile{Chapter03/knuckle1r.eps}}
+\caption{\em Numerical trajectory of  a knuckleball.
+The parameters for this pitch are $v_0=65$\,mph, $\theta = 4^\circ$,
+$\varphi_0 = 0^\circ$, $\omega = 40$\,rpm, and ${\tt h}=1\times 10^{-4}$. 
+The ball passes over the plate at $56\,mph$ about $0.69$ seconds after
+it is released by the pitcher. The ball rotates about $166^\circ$ whilst it is
+in the air.
+ }\label{fknuckle1}
+\end{figure}
+
+Figure~\ref{fknuckle1} shows the lateral displacement of a knuckleball
+thrown with a somewhat higher rate of spin than those shown previously: {\em i.e.},  $\omega = 40$\,rpm.
+Note the curious way in which the ball ``dances'' through the air. Given that the
+difference between a good hit and a bad hit can correspond to a shift in the strike point
+on the bat by as little as $1/4$ of an inch, it  must be quite a challenge to hit such
+a pitch well!

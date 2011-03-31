@@ -1,0 +1,152 @@
+\chapter{Introduction}
+
+\section{Intended Audience}These set of lecture notes are designed for an upper-division undergraduate
+course on computational physics.
+
+\section{Major Sources}
+The sources which I have consulted most frequently whilst developing course material are as
+follows:
+\begin{description}
+\item {\sc C/C++ programming:}
+\begin{description}
+\item {\sf Software engineering in C}, P.A.~Darnell, and P.E.~Margolis (Springer-Verlag, New York NY, 1988).
+\item {\sf The C++ programming language}, 2nd edition, B.~Stroustrup (Addison-Wesley, Reading MA, 1991).
+\item {\sf Schaum's outline: Programming with C}, 2nd edition, B.~Gottfried (McGraw-Hill, New York
+NY, 1996).
+\item {\sf Schaum's outline: Programming with C++}, 2nd edition, J.R.~Hubbard (McGraw-Hill, New York
+NY, 2000).
+\end{description}
+\item {\sc Numerical methods and computational physics:}
+\begin{description}
+\item {\sf Computational physics}, D.~Potter (Wiley, New York NY, 1973).
+\item {\sf Numerical recipes in C: the
+art of scientific computing}, W.H.~Press, S.A.~Teukolsky, W.T.~Vettering, and
+B.R.~Flannery (Cambridge University Press, Cambridge UK, 1992).
+\item {\sf Computational physics}, N.J.~Giordano (Prentice-Hall, Upper Saddle River
+NJ, 1997).
+\item {\sf Numerical methods for physics}, 2nd edition, A.L.~Garcia (Prentice-Hall, Upper Saddle River
+NJ, 2000).
+\end{description}
+\item {\sc Physics of baseball:}
+\begin{description}
+\item {\sf The physics of baseball}, R.K.~Adair (Harper \& Row, New York NY, 1990).
+\item {\sf The physics of sports}, A.A.~Armenti, Jr., Ed.\ (American Institute of Physics, New York
+NY, 1992).
+\end{description}
+\item {\sc Chaos:}
+\begin{description}
+\item {\sf Chaos in a computer-animated pendulum}, R.L.~Kautz, Am.\ J.\ Phys.\ {\bf 61}, 407 (1993).
+\item {\sf Nonlinear dynamics and chaos}, S.H.~Strogatz, (Addison-Wesley, Reading MA, 1994).
+\item {\sf Chaos: An introduction to dynamical systems}, K.T.~Alligood, T.D.~Sauer, and J.A.~Yorke,
+(Springer-Verlag, New York NY, 1997).
+\end{description}
+\end{description}
+
+\section{Purpose of Course}
+The purpose of this course is demonstrate to students how computers can enable us
+to both broaden and deepen our understanding of physics by vastly increasing the range of
+mathematical calculations which we can conveniently perform. 
+
+\section{Course Philosophy}
+My approach to computational physics is to write self-contained programs in a high-level
+scientific language---{\em i.e.}, either FORTRAN or C/C++. Of course,
+there are many other possible approaches, each with their own peculiar advantages and
+disadvantages. It is  instructive to  briefly examine the available options. 
+
+\section{Programming Methodologies}
+Basically, there are {\em three}\/ possible methods by which we could perform the numerical calculations 
+which we are going to encounter during this course. 
+
+Firstly, we could use
+a mathematical software package, such as {\sc Mathematica}\footnote{See
+{\tt http://www.wolfram.com}}, {\sc Maple}\footnote{See {\tt http://www.maplesoft.com}}
+or {\sc Matlab}.\footnote{See {\tt http://www.mathworks.com}}\@
+The main advantage of these packages is that they facilitate the very rapid coding  up
+of numerical problems. The main disadvantage is that they produce executable code which is {\em interpreted},
+rather than {\em compiled}. Compiled code is translated directly from a high-level language into
+machine code instructions, which, by definition, are platform dependent---after all, an Intel x86 chip has
+a completely different instruction set to a Power-PC chip. Interpreted code is translated
+from a high-level language into a set of meta-code instructions which are platform independent. 
+Each meta-code instruction is then translated into a fixed set of machine code instructions which
+is peculiar to the particular hardware platform on which the code is being run. In general, interpreted
+code is nowhere near as efficient, in terms of computer resource utilization, as compiled code: {\em i.e.},
+interpreted code run {\em a lot slower}\/ than equivalent compiled code. Thus, although 
+{\sc Mathematica}, {\sc Maple}, and {\sc Matlab} are ideal environments in which to perform 
+relatively {\em small}\/
+calculations, they are not suitable  for full-blown research projects, since
+the code which they produce generally runs far too slowly. 
+
+Secondly, we could write our own programs in a high-level language, but use calls
+to pre-written, pre-compiled routines in commonly available
+  subroutine libraries, such as {\sc NAG},\footnote{See {\tt http://www.nag.com}}
+ {\sc LINPACK},\footnote{See {\tt http://www.netlib.org}} and 
+{\sc ODEPACK},\footnote{{\em ibid.}} to perform all of the real numerical work.
+This is the approach used by the majority of research physicists.
+
+Thirdly, we could write our own programs---completely from scratch---in a high-level language.
+This is the approach used in this course. I have opted {\em not}\/ to use pre-written subroutine libraries,
+simply because I want students to develop the ability to think for themselves about scientific
+programming and numerical techniques. Students should, however, realize that, in many cases,
+pre-written library routines offer solutions to numerical problems which are pretty hard to
+improve upon.
+
+\section{Scientific Programming Languages}
+What is the best high-level  language to use for scientific
+programming? This, unfortunately, is a highly
+contentious question. Over the years, literally hundreds of high-level languages
+have been developed. However, few have stood the test of time. Many languages
+({\em e.g.}, Algol, Pascal, Haskell) can be dismissed as ephemeral computer
+science fads. Others  ({\em e.g.}, Cobol, Lisp, Ada) are too specialized
+to adapt for scientific use.
+Let us examine the remaining options:
+\begin{description}
+\item [{\sc FORTRAN 77}:] FORTRAN was the first high-level programming language to be developed: in fact,
+it predates the languages listed below by decades. Before the advent of FORTRAN, all programming
+was done in assembler code!
+Moreover, FORTRAN was specifically designed for scientific computing. Indeed, in the early
+days of computers {\em all}\/ computing was scientific in nature---{\em i.e.}, 
+physicists and mathematicians were the
+original computer scientists!
+FORTRAN's main advantages are that it is very straightforward, and it interfaces well with
+most commonly available, pre-written subroutine libraries (since these libraries 
+generally consist of compiled FORTRAN code). FORTRAN's main disadvantages are all
+associated with  its relative antiquity. For instance. FORTRAN's control
+statements are fairly rudimentary, whereas its input/output facilities are positively paleolithic. 
+\item [{\sc FORTRAN 90}:] This language is a major extension to FORTRAN 77 which does away with many of
+the latter language's objectionable features. In addition, many ``modern'' features,
+such as dynamic memory allocation, are included in the language for the first time. The major
+disadvantage of this language is the absence of an inexpensive compiler.
+There seems little prospect of this situation changing in the near future.
+\item [{\sc C}:] This language was originally developed by computer scientists to write operating systems.
+Indeed, all UNIX operating systems are written in C.
+ C is,
+consequently, an extremely flexible and powerful language. Amongst its major 
+advantages are its good control statements and 
+excellent input/output
+facilities. C's main disadvantage is that, since it was not specifically written to be a
+scientific language, some important scientific features ({\em e.g.}, complex arithmetic)
+are missing. Although C is a high-level language, it incorporates many comparatively low-level
+features, such as pointers (this is hardly surprisingly,
+since C was originally designed to write operating systems). The low-level features of C---in particular,
+the rather primitive implementation of arrays---sometimes make scientific programming more complicated than need be the
+case, and undoubtedly facilitate programming errors. On the other hand, these features allow
+scientific programmers to write {\em extremely}\/ efficient code. Since efficiency is generally the most
+important concern in scientific computing, the low-level features of C are, on balance,
+ advantageous.
+\item [{\sc C++}:] This language is a major extension of C whose main aim is to
+facilitate object-orientated
+programming. Object-orientation  is a completely different approach to
+programming than the
+more traditional procedural approach: it is particularly well suited to large  projects involving
+many people who are each writing different segments of the same code. However, object-orientation
+represents a large, and somewhat unnecessary, overhead for the type of straightforward, single person 
+programming tasks considered in this course.
+Note, however, that C++  incorporates some non-object-orientated extensions to C which are extremely
+ useful.
+\end{description}
+Of the above languages, we can immediately rule out C++,
+because object-orientation is an unnecessary complication (at least, for our purposes), and FORTRAN~90, because of the absence of an inexpensive
+compiler. The remaining options are FORTRAN~77 and C.
+I have chosen to use C (augmented by some of the useful, non-object-orientated
+features of C++) in this course, simply because I find the archaic features of
+FORTRAN~77 too embarrassing to teach students in the 21st century. 

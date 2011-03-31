@@ -1,0 +1,932 @@
+\chapter{Wave Equation}
+\section{Introduction}
+The wave equation, which in one dimension takes the form
+\begin{equation}\label{wave1d}
+\frac{\partial^2\xi}{\partial t^2} = c^2\,\frac{\partial^2 \xi}{\partial x^2},
+\end{equation}
+occurs so frequently in physics that it is not necessary to enumerate examples.
+Here, $\xi$ is usually some sort of displacement or perturbation, whereas $c$ is the
+(constant) wave speed. The wave equation possesses the formal solution
+\begin{equation}
+\xi(x,t) = F(x-c\,t) + G(x+c\,t),
+\end{equation}
+where $F$ and $G$ are arbitrary functions. The above solution  represents arbitrarily
+shaped wave pulses propagating  with speed $c$ in the $+x$ and $-x$ directions, respectively, without
+changing shape.
+
+The wave equation, which is second-order in space and time,
+ can be written as two coupled first-order  equations
+by defining the new variables $v=\partial\xi/\partial t$ and $\theta=-c\,\partial\xi/\partial x$.
+Expressing Eq.~(\ref{wave1d}) in terms of these new variables, we obtain
+\begin{eqnarray}
+\frac{\partial v}{\partial t} + c\,\frac{\partial \theta}{\partial x} &=& 0,\\[0.5ex]
+\frac{\partial \theta}{\partial t} + c\,\frac{\partial v}{\partial x} &=& 0.
+\end{eqnarray}
+Note that when solving the wave equation numerically it is generally preferable to write it
+as a set of coupled first-order equations, as shown above.
+
+\section{1-D Advection Equation}
+The wave equation is closely related to the so-called {\em advection equation}, which
+in one dimension takes the form
+\begin{equation}\label{advection}
+\frac{\partial u}{\partial t} = -v\,\frac{\partial u}{\partial x}.
+\end{equation}
+This equation describes the passive advection of some scalar field $u(x,t)$
+carried along by a flow of constant speed $v$. Since the advection equation
+is somewhat simpler than the wave equation, we shall discuss it first.
+The advection equation
+possesses the formal solution
+\begin{equation}
+u(x,t) = F(x-v\,t),
+\end{equation}
+where $F$ is an arbitrary function. This solution describes an  arbitrarily
+shaped pulse which is swept along by the flow, at constant speed $v$, without
+changing shape. 
+
+We seek the solution of Eq.~(\ref{advection}) in the region $x_l\leq x\leq x_h$,
+subject to the simple Dirichlet boundary conditions $u(x_l) = u(x_h)=0$.
+As usual, we discretize in time on the uniform grid $t_n=t_0+n\,\delta t$, for $n=0,1,2,\cdots$.
+Furthermore, in the  $x$-direction, we discretize on the uniform grid $x_i = x_l + i\,\delta x$, for
+$i=0,N+1$, where $\delta x = (x_h-x_l)/(N+1)$. Adopting an explicit temporal differencing
+scheme, and  a centered spatial differencing scheme,  Eq.~(\ref{advection}) yields
+\begin{equation}\label{ftcs1}
+\frac{u_i^{n+1} - u_i^n}{\delta t} = - v\,\frac{u_{i+1}^n-u_{i-1}^n}{2\,\delta x},
+\end{equation}
+where $u_i^n\equiv u(x_i,t_n)$. The above equation can be rewritten
+\begin{equation}\label{ftcs}
+u_i^{n+1} = u_i^n -\frac{C}{2}\,(u_{i+1}^n-u_{i-1}^n),
+\end{equation}
+where $C= v\,\delta t/\delta x$.
+
+Let us perform a von Neumann stability analysis of the above differencing scheme.
+Writing $u(x,t)= \hat{u}(t)\,\exp ({\rm i}\,k\,x)$, we obtain
+$\hat{u}_i^{n+1}=A\,\hat{u}_i^n$, where
+\begin{equation}
+A = 1 - {\rm i} \,C\,\sin (k \,\delta x).
+\end{equation}
+Note that 
+\begin{equation}
+|A|^2 = 1 + C^2\,\sin^2(k\,\delta x) > 1.
+\end{equation}
+Thus, the magnitude of the amplification factor is greater than unity for
+all $k$. This implies, unfortunately, that the  simple differencing scheme (\ref{ftcs})
+is {\em unconditionally unstable}.
+
+\section{Lax Scheme}
+The instability in the differencing scheme (\ref{ftcs}) can be fixed by replacing
+$u_i^n$ on the right-hand side by the {\em spatial average} of $u$ taken over the neighbouring grid
+points. Thus, we obtain
+\begin{equation}\label{lax}
+u_i^{n+1} = \frac{1}{2}\,(u_{i+1}^n+u_{i-1}^n) -\frac{C}{2}\,(u_{i+1}^n-u_{i-1}^n),
+\end{equation}
+which is known as the {\em Lax} scheme. A von Neumann stability analysis
+of the Lax scheme yields the following expression for the amplification
+factor:
+\begin{equation}
+A = \cos (k\,\delta x) - {\rm i} \,C\,\sin (k \,\delta x).
+\end{equation}
+Now
+\begin{equation}\label{laxa}
+|A|^2 = 1 - (1-C^2)\,\sin^2(k\,\delta x).
+\end{equation}
+It follows that the Lax scheme is unconditionally stable ({\em i.e.}, $|A| < 1$
+for all $k$), provided that $C<1$. From the definition of $C$, the
+inequality $C<1$ can also be written
+\begin{equation}
+\delta t < \frac{\delta x}{v}.
+\end{equation}
+This is the famous Courant-Friedrichs-Lewy (or CFL) stability criterion.
+In fact, {\em all} stable {\em explicit} differencing schemes for solving the advection equation
+are subject to the CFL constraint, which determines  the maximum allowable time-step.
+
+Listed below is a routine which solves the 1-d advection equation
+via the Lax method.
+{\small\begin{verbatim}
+// Lax1D.cpp
+
+// Function to evolve advection equation in 1-d:
+
+//  du / dt + v du / dx = 0  for  xl <= x <= xh
+
+//  u = 0  at x=xl and x=xh
+
+// Array u assumed to be of extent N+2.
+
+// Now, ith element of array corresponds to
+
+//  x_i = xl + i * dx    i=0,N+1
+
+// Here, dx = (xh - xl) / (N+1) is grid spacing.
+
+// Function evolves u by single time-step.
+
+// C = v dt / dx, where dt is time-step.
+
+// Uses Lax scheme.
+
+#include <blitz/array.h>
+
+using namespace blitz;
+
+void Lax1D (Array<double,1>& u, double C)
+{
+  // Set N. Declare local array.
+  int N = u.extent(0) - 2;
+  Array<double,1> u0(N+2);
+
+  // Evolve u
+  u0 = u;
+  for (int i = 1; i <= N; i++)
+    u(i) = 0.5 * (u0(i+1) + u0(i-1)) - 0.5 * C * (u0(i+1) - u0(i-1));
+
+  // Set boundary conditions
+  u(0) = 0.;
+  u(N+1) = 0.;
+}
+\end{verbatim}}
+
+Figure~\ref{decay} shows an example calculation which uses the above routine to
+advect a Gaussian pulse. The initial condition is
+\begin{equation}\label{initcn}
+u(x,0) = \exp[-100\,(x-0.5)^2],
+\end{equation}
+and the calculation is performed with $v=1$, $\delta t = 2.49\times 10^{-3}$, and $N=200$.
+Furthermore, $x_l = v\,t$ and $x_h = 1 + v\,t$.
+Note that $C=0.5$ for these parameters. It can be
+seen that the pulse is advected at the correct speed: {\em i.e.}, the
+pulse  appears approximately stationary when  plotted versus $x-v\,t$. 
+Unfortunately, the pulse does not remain the same shape (as it should). Instead, the
+pulse becomes gradually lower and wider as it propagates, and eventually
+diffuses away entirely.
+
+\begin{figure}
+\epsfysize=3in
+\centerline{\epsffile{Chapter07/decay.eps}}
+\caption{\em Advection of a 1-d Gaussian pulse.
+Numerical  calculation performed using
+$v=1$, $\delta t = 2.49\times 10^{-3}$, and $N=200$.  The
+solid curve shows the initial condition at $t=0$, the short-dashed curve  the numerical solution
+at $t=1$, the long-dashed curve  the numerical solution
+at $t=2$, and the dot-dashed  curve  the numerical solution at 
+$t=3$. }\label{decay}
+\end{figure}
+
+It is clear, from the above calculation, that the Lax scheme introduces a spurious
+dispersion effect into the advection problem. We can understand the origin
+of this effect by attempting a Fourier solution, $u(x,t)=\hat{u}_k(t)\,\exp(\,{\rm i}\,k\,x)$,
+of Eq.~(\ref{advection}). We easily obtain
+\begin{equation}
+\hat{u}_k(t) = \hat{u}_k(0)\,\exp(-{\rm i}\,k\,v\,t).
+\end{equation}
+Note that $|\hat{u}_k|$ is {\em constant} in time for all values of $k$. In other words, the
+{\em amplitudes} of the Fourier harmonics of a true solution of the advection equation
+remain constant in time---it is the {\em phases} of the harmonics which
+evolve. Let us now examine Eq.~(\ref{laxa}). It can be seen that, provided  the CFL condition
+$C<1$ is satisfied,  the magnitude of the amplification factor, $|A|$,
+is {\em less than unity}  for all Fourier harmonics. In other words,
+the Lax differencing scheme causes the Fourier harmonics to {\em decay} in time. It is this unphysical
+attenuation of the Fourier harmonics which gives rise to the strong dispersion effect
+illustrated in Fig.~\ref{decay}.
+
+\begin{figure}
+\epsfysize=3in
+\centerline{\epsffile{Chapter07/inst.eps}}
+\caption{\em Advection of a 1-d Gaussian pulse.
+Numerical  calculation performed using
+$v=1$, $\delta t = 9.95\times 10^{-3}$, and $N=200$.  The
+dotted curve shows the initial condition at $t=0.00$, the short-dashed curve  the numerical solution
+at $t=0.15$, the long-dashed curve  the numerical solution
+at $t=0.30$, and the solid  curve  the numerical solution at 
+$t=0.37$. }\label{inst}
+\end{figure}
+
+Figure~\ref{inst} shows a calculation made using the Lax scheme in
+which the CFL condition is violated. This
+calculation is identical to the one discussed previously, except that the time-step
+has been increased to $\delta t=9.95\times 10^{-3}$,
+yielding a CFL parameter, $C=2.0$, which exceeds unity. It can be seen that
+the pulse grows in amplitude, and eventually starts to break up due to a short-wavelength
+instability. 
+
+\section{Crank-Nicholson Scheme}\label{cnwave}
+The Crank-Nicholson implicit scheme for solving the diffusion equation (see Sect.~\ref{cn})
+ can be adapted to solve the advection equation.
+Thus, taking the average of the right-hand side of Eq.~(\ref{advection}) between the
+beginning and  end of  the time-step, we obtain the  differencing
+scheme written below:
+\begin{equation}
+u_i^{n+1} + \frac{C}{4}\,(u_{i+1}^{n+1}-u_{i-1}^{n+1}) = u_i^n - \frac{C}{4}\,(u_{i+1}^{n}-u_{i-1}^{n}).
+\end{equation}
+A von Neumann stability analysis of the above scheme yields the following
+expression for the amplification factor:
+\begin{equation}
+A = \frac{1 - {\rm i} \,(C/2)\,\sin (k \,\delta x)}{1 + {\rm i} \,(C/2)\,\sin (k \,\delta x)}.
+\end{equation}
+Note that $|A| = 1$ for all values of $k$, irrespective of the value of $C$. This implies that
+the Crank-Nicholson implicit scheme is {\em not} subject to the CFL constraint, $C<1$
+(since there is no value of $k$ for which $|A|>1$).  Moreover,
+there is no spurious decay in the Fourier harmonics
+of the solution (since $|A|=1$). 
+Hence, unlike the Lax scheme, we would not expect the  Crank-Nicholson scheme to introduce
+strong numerical dispersion into the advection problem.
+
+Listed below is a routine which solves the 1-d advection equation
+via the Crank-Nicholson method.
+{\small\begin{verbatim}
+// Advect1D.cpp
+
+// Function to evolve advection equation in 1-d:
+
+//  du / dt + v du / dx = 0  for  xl <= x <= xh
+
+//  u = 0  at x=xl and x=xh
+
+// Array u assumed to be of extent N+2.
+
+// Now, ith element of array corresponds to
+
+//  x_i = xl + i * dx    i=0,N+1
+
+// Here, dx = (xh - xl) / (N+1) is grid spacing.
+
+// Function evolves u by single time-step.
+
+// C = v dt / dx, where dt is time-step.
+
+// Uses Crank-Nicholson scheme.
+
+#include <blitz/array.h>
+
+using namespace blitz;
+
+void Tridiagonal (Array<double,1> a, Array<double,1> b, Array<double,1> c, 
+                  Array<double,1> w, Array<double,1>& u);
+
+void Advect1D (Array<double,1>& u, double C)
+{  
+  // Find N. Declare local arrays.
+  int N = u.extent(0) - 2;
+  Array<double,1> a(N+2), b(N+2), c(N+2), w(N+2);
+
+  // Initialize tridiagonal matrix
+  for (int i = 2; i <= N;   i++) a(i) = - 0.25 * C;
+  for (int i = 1; i <= N; i++) b(i) = 1.;
+  for (int i = 1; i <= N-1; i++) c(i) = + 0.25 * C;
+
+  // Initialize right-hand side vector
+  for (int i = 1; i <= N; i++)
+    w(i) = u(i) - 0.25 * C * (u(i+1) - u(i-1));
+
+  // Invert tridiagonal matrix equation
+  Tridiagonal (a, b, c, w, u);
+
+  // Calculate i=0 and i=N+1 values
+  u(0) = 0.;
+  u(N+1) = 0.;
+}
+\end{verbatim}}
+
+Figure~\ref{decay} shows an example calculation which uses the above routine to
+advect a Gaussian pulse. The initial condition is as specified in Eq.~(\ref{initcn}),
+and the calculation is performed with $v=1$, $\delta t = 9.95\times 10^{-3}$, and $N=200$.
+Note that $C=2.0$ for these parameters. It can be seen that the pulse propagates at (almost) the
+correct speed, and maintains approximately the same shape. Clearly, the
+performance of the Crank-Nicholson scheme is vastly superior to that of the Lax scheme.
+
+\begin{figure}
+\epsfysize=3in
+\centerline{\epsffile{Chapter07/nodisperse.eps}}
+\caption{\em Advection of a 1-d Gaussian pulse.
+Numerical  calculation performed using
+$v=1$, $\delta t = 9.95\times 10^{-3}$, and $N=200$.  The
+solid curve shows the initial condition at $t=0$, the short-dashed curve  the numerical solution
+at $t=1$, the long-dashed curve  the numerical solution
+at $t=2$, and the dot-dashed  curve  the numerical solution at 
+$t=3$. }\label{nodisperse}
+\end{figure}
+
+\section{Upwind Differencing}\label{supwind}
+We might be forgiven for concluding that the Crank-Nicholson scheme represents an
+efficient and accurate general purpose numerical method for solving the advection equation.
+This is indeed the case, provided we restrict ourselves to fairly {\em smooth} wave-forms.
+Unfortunately, the Crank-Nicholson scheme does a very poor
+job at advecting wave-forms with sharp leading or trailing edges. This is illustrated in
+Fig.~\ref{upwind1}, which shows a calculation in which the  Crank-Nicholson scheme 
+is used to advect a square wave-pulse. It can be seen that spurious oscillations are generated
+at both the leading and trailing edges of the wave-form. It turns out that all {\em central
+difference}  schemes for solving the advection equation suffer from a
+similar problem.
+\begin{figure}
+\epsfysize=3in
+\centerline{\epsffile{Chapter07/upwind1.eps}}
+\caption{\em Advection of a 1-d square wave-pulse.
+Numerical  calculation performed using
+$v=1$, $\delta t = 2.49\times 10^{-3}$, and $N=200$.  The
+dotted curve shows the initial condition at $t=0.0$, whereas the solid curve shows the numerical solution
+at $t=0.1$.}\label{upwind1}
+\end{figure}
+
+The only known way to suppress spurious oscillations 
+at  the leading and trailing edges of a sharp wave-form is to adopt a so-called {\em upwind}
+differencing scheme. In such a scheme, the spatial differences are skewed in the ``upwind''
+direction: {\em i.e.}, the direction from which the advecting flow emanates. Thus, the
+upwind version of the simple explicit differencing scheme (\ref{ftcs1})
+is written
+\begin{equation}
+\frac{u_i^{n+1} - u_i^n}{\delta t} = - v\,\frac{u_{i}^n-u_{i-1}^n}{\delta x},
+\end{equation}
+or
+\begin{equation}
+u_i^{n+1} = u_i^n -C\,(u_{i}^n-u_{i-1}^n),
+\end{equation}
+Note that this scheme is only {\em first-order} in space, whereas every other scheme
+we have discussed has been {\em second-order}. A von Neumann stability analysis
+of the above scheme yields
+\begin{equation}
+A = 1 - C\,[1-\cos (k \,\delta x)]-{\rm i} \,C\,\sin (k \,\delta x).
+\end{equation}
+Note that 
+\begin{equation}
+|A|^2 =1-2\,C\,(1-C)\,[1-\cos (k \,\delta x)].
+\end{equation}
+It follows that $|A|<1$ for all $k$ provided that $C<1$. Thus, the upwind differencing
+scheme is stable provided that the CFL condition is satisfied.
+Fig.~\ref{upwind2}  shows a calculation in which the  above scheme 
+is used to advect a square wave-pulse. There are now no spurious oscillations generated
+at the sharp edges of the wave-form. On the other hand, the wave-form shows evidence
+of dispersion. Indeed, the upwind differencing scheme suffers from the
+same type of spurious dispersion problem as the Lax scheme. 
+Unfortunately, there is no known  differencing scheme which is both
+non-dispersive and
+capable of dealing well with sharp wave-fronts.
+In fact, sophisticated
+codes which solve the  advection (or wave) equation generally employ an upwind scheme in regions close to
+sharp wave-fronts, or shocks, and a more accurate non-dispersive scheme elsewhere. 
+
+\begin{figure}
+\epsfysize=3in
+\centerline{\epsffile{Chapter07/upwind2.eps}}
+\caption{\em Advection of a 1-d square wave-pulse.
+Numerical  calculation performed using
+$v=1$, $\delta t = 2.49\times 10^{-3}$, and $N=200$.  The
+dotted curve shows the initial condition at $t=0.0$, whereas the solid curve shows the numerical solution
+at $t=0.1$.}\label{upwind2}
+\end{figure}
+
+Incidentally, it is easily demonstrated that the downwind differencing scheme,
+\begin{equation}
+\frac{u_i^{n+1} - u_i^n}{\delta t} = - v\,\frac{u_{i+1}^n-u_{i}^n}{\delta x},
+\end{equation}
+is unconditionally unstable.
+
+\section{1-D Wave Equation}\label{swave1d}
+Consider a plane polarized electromagnetic wave propagating {\em in vacuo} along the $z$-axis.
+Suppose that the electric and magnetic fields take the form ${\bf E} = [E_x(z,t),0,0]$, and
+${\bf B} = [0,B_y(z,t),0]$. Now, according to Maxwell's equations,
+\begin{eqnarray}
+\frac{\partial E_x}{\partial t} + c\,\frac{\partial H_y}{\partial z} &=& 0,\label{wave1da}\\[0.5ex]
+\frac{\partial H_y}{\partial t} + c\,\frac{\partial E_x}{\partial z} &=& 0,\label{wave1db}
+\end{eqnarray}
+where $H_y = c\,B_y$, and $c$ is the velocity of light. Note that the above equations
+take the form of two coupled advection equations.
+Let us find the numerical 
+solution of
+these equations in some region $0\leq z \leq L$ which is bounded by 
+{\em perfectly
+conducting walls} at $z=0$ and $z=L$. Now, both the {\em tangential} electric field and
+the {\em normal} magnetic field must be zero at a perfect conductor. It follows that
+\begin{equation}\label{wavebca}
+E_x(0,t) = E_x(L,t) = 0.
+\end{equation}
+Moreover, Eq.~(\ref{wave1da}) yields
+\begin{equation}\label{wavebcb}
+\frac{\partial H_y(0,t)}{\partial z} = \frac{\partial H_y(L,t)}{\partial z} = 0.
+\end{equation}
+We expect Eqs.~(\ref{wave1da}) and~(\ref{wave1db})  to support wave-like solutions which
+bounce backwards and forwards between the conducting walls. 
+
+As before, we discretize in time on the uniform grid $t_n=t_0+n\,\delta t$, for $n=0,1,2,\cdots$.
+Furthermore, in the  $z$-direction, we discretize on the uniform grid $z_i = i\,\delta z$, for
+$i=0,I$, where $\delta z = L/I$. Adopting a Crank-Nicholson  temporal differencing scheme
+similar to that discussed in Sect.~\ref{cnwave}, Eqs.~(\ref{wave1da})--(\ref{wave1db}) yield
+\begin{eqnarray}\label{cnwave1da}
+\frac{(E_x)_i^{n+1}-(E_x)_i^n}{\delta t} +\frac{c}{2}\left(\frac{\partial H_y}{\partial z}\right)_i^{n+1}
++ \frac{c}{2}\left(\frac{\partial H_y}{\partial z}\right)_i^n&=& 0,\\[0.5ex]
+\frac{(H_y)_i^{n+1}-(H_y)_i^n}{\delta t} +\frac{c}{2}\left(\frac{\partial E_x}{\partial z}\right)_i^{n+1}
++ \frac{c}{2}\left(\frac{\partial E_x}{\partial z}\right)_i^n&=& 0,\label{cnwave1db}
+\end{eqnarray}
+where $(E_x)_i^n\equiv E_x(z_i,t_n)$, {\em etc.}
+
+Adopting a Fourier approach, we write
+\begin{eqnarray}
+(E_x)_i^n &=& \sum_{j=0,I} \hat{E}_j^n\,\sin(i\,j\,\pi/I),\\[0.5ex]
+(H_y)_i^n &=& \sum_{j=0,I} \hat{H}_j^n\,\cos(i\,j\,\pi/I),
+\end{eqnarray}
+which automatically satisfies the boundary conditions (\ref{wavebca}) and (\ref{wavebcb}). 
+Equations (\ref{cnwave1da}) and (\ref{cnwave1db}) yield
+\begin{eqnarray}
+\hat{E}_i^{n+1}-\hat{E}_i^n - i\,D\,(\hat{H}_i^{n+1}+\hat{H}_i^n) &=& 0,\\[0.5ex]
+\hat{H}_i^{n+1}-\hat{H}_i^n +  i\,D\,(\hat{E}_i^{n+1}+\hat{E}_i^n) &=& 0,
+\end{eqnarray}
+where $D=\pi\,c\,\delta t/(2\,L)$. It follows that
+\begin{eqnarray}\label{stepa}
+\hat{E}_i^{n+1} &=& +\frac{2\,i\,D}{1+i^2\,D^2}\,\hat{H}_i^n + \frac{1-i^2\,D^2}{1+i^2\,D^2}\,\hat{E}_i^n,\\[0.5ex]
+\hat{H}_i^{n+1} &=& -\frac{2\,i\,D}{1+i^2\,D^2}\,\hat{E}_i^n + \frac{1-i^2\,D^2}{1+i^2\,D^2}\,\hat{H}_i^n,
+\label{stepb}
+\end{eqnarray}
+for $i=0,I$. 
+
+Let us determine the eigenvalues $\lambda$ of the above linear system,
+assuming that $(\hat{E}_i^{n+1}, \hat{H}_i^{n+1}) = \lambda\,(\hat{E}_i^n, \hat{H}_i^n)$. After a little analysis,
+we obtain
+\begin{equation}
+\lambda^2 - 2\,\frac{1-i^2\,D^2}{1+i^2\,D^2}\,\lambda + 1 = 0.
+\end{equation}
+For all values of $i$, the two roots of the above quadratic are complex, but have modulus unity: {\em i.e.},
+$|\lambda|=1$. This implies that our differencing scheme is both
+numerically stable (if $|\lambda|>1$ then the scheme would be unstable, since the associated
+eigenfunction would be amplified at each time-step)
+and non-dispersive (if $|\lambda|<1$ then all Fourier harmonics would eventually
+decay away, and, hence, so would the solution). Note that the above calculation is
+equivalent to von Neumann stability analysis.
+
+The routine listed below solves the 1-d wave equation using the Crank-Nicholson scheme
+discussed above. The routine first Fourier transforms $E_x$ and $H_y$, takes
+a time-step using Eqs.~(\ref{stepa}) and (\ref{stepb}), and then reconstructs
+$E_x$ and $H_y$ via an inverse Fourier transform.
+{\small\begin{verbatim}
+// Wave1D.cpp
+
+// Function to evolve 1-d wave equation:
+
+//  d E_x / dt + c d H_y / dz = 0
+
+//  d H_y / dt + c d E_x / dz = 0
+
+// in region 0 < z < L. 
+
+// Boundary conditions: 
+
+//  E_x(0,t) = E_x(L,t) = 0
+
+//  d H_y(0,t) / dz =  d H_y(L,t) / dz = 0
+
+// Arrays Ex, Hy assumed to be of extent I+1.
+
+// Now, ith elements of arrays correspond to
+
+//  z_i = i * L / J      i=0,I
+
+// Also, D = pi c dt / (2 L), where dt is time-step.
+
+// Uses Crank-Nicholson scheme.
+
+#include <blitz/array.h>
+
+using namespace blitz;
+
+void fft_forward_cos (Array<double,1> f, Array<double,1>& F);
+void fft_backward_cos (Array<double,1> F, Array<double,1>& f);
+void fft_forward_sin (Array<double,1> f, Array<double,1>& F);
+void fft_backward_sin (Array<double,1> F, Array<double,1>& f);
+
+void Wave1D (Array<double,1>& Ex, Array<double,1>& Hy, double D)
+{
+  // Find I. Declare local arrays
+  int I = Ex.extent(0) - 1;
+  Array<double,1> EE(I+1), HH(I+1), EE0(I+1), HH0(I+1);
+
+  // Fourier transform Ex and Hy
+  fft_forward_sin (Ex, EE0);
+  fft_forward_cos (Hy, HH0);
+
+  // Evolve EE and HH
+  for (int i = 0; i <= I; i++)
+    {
+      double x = double (i) * D;
+      double fp = 1. + x*x;
+      double fm = 1. - x*x;
+
+      EE(i) = 2. * x * HH0(i) + fm * EE0(i);
+      EE(i) /= fp;
+      HH(i) = - 2. * x * EE0(i) + fm * HH0(i);
+      HH(i) /= fp;
+    }
+
+  // Reconstruct Ex and Hy via inverse Fourier transform
+  fft_backward_sin (EE, Ex);
+  fft_backward_cos (HH, Hy);
+}
+\end{verbatim}}
+
+Figure~\ref{wave1d} shows an example calculation which uses the above routine to
+propagate a Gaussian wave-pulse. The initial condition is
+\begin{equation}
+E_x(z,0) =  H_y(z,0) = \exp[-100\,(z-0.5)^2],
+\end{equation}
+and the calculation is performed with $L=1$, $c=1$, $\delta t = 5\times 10^{-3}$, and $N=100$.
+It can be seen that the pulse moves to the right, reflects off the conducting wall
+at $z=1$, and then moves to the left. Note, that $E_x=+H_y$ when the wave is far
+from the conducting walls and
+moving to the right, whereas $E_x=-H_y$ when the wave is far
+from the conducting walls and
+moving to the left.
+
+\begin{figure}
+\epsfysize=5in
+\centerline{\epsffile{Chapter07/wave1d.eps}}
+\caption{\em Propagation of a 1-d Gaussian wave-pulse.
+Numerical  calculation performed using
+$c=1$, $\delta t = 5\times 10^{-3}$, and $N=100$.  The
+solid curves show $E_x$, whereas the dashed curves show $H_y$. The
+top-left, top-right, middle-left, middle-right, bottom-left, and
+bottom-right panels show the solution at $t=0.0$, $0.2$, $0.4$, $0.6$, $0.8$,
+and $1.0$, respectively. }\label{fwave1d}
+\end{figure}
+
+Figure~\ref{wave1da} shows a second example calculation performed with the
+same parameters as the first. In this calculation, the pulse is allowed to reflect
+off the conducting walls {\em ten} times before returning to its initial position. Note
+that the pulse amplitude and shape remain constant to a very good approximation during
+this process. The fact that the pulse returns almost exactly to its initial position
+after ten time periods have elapsed ({\em i.e.}, at $t=10$) 
+demonstrates that it is propagating at the
+correct speed ({\em i.e.}, $c=1$).
+
+\begin{figure}
+\epsfysize=3in
+\centerline{\epsffile{Chapter07/wave1da.eps}}
+\caption{\em Propagation of a 1-d Gaussian wave-pulse.
+Numerical  calculation performed using
+$c=1$, $\delta t = 5\times 10^{-3}$, and $N=100$.
+The solid curve shows $E_x$ at $t=0.$, the dashed curve shows $E_x$ at $t=10.$,
+and the dotted curve (obscured by the dashed curve) shows $B_y$ at $t=10.$}\label{fwave1da}
+\end{figure}
+
+Figure~\ref{fwave1db} shows a third example calculation which uses the above listed routine to
+propagate a square wave-pulse. Note that the routine does a very poor job, since
+spurious oscillations are generated at the sharp leading and trailing edges of
+the wave-form. As discussed in Sect.~\ref{supwind}, such oscillations can
+only be suppressed by adopting an {\em upwind} differencing scheme, which in this
+case means that the spatial differences must be skewed in the direction from
+which the wave is propagating. Unfortunately, simple  explicit upwind schemes are
+subject to the CFL constraint,
+\begin{equation}
+\delta t < \frac{\delta z}{c},
+\end{equation}
+and also tend to be highly dispersive.
+
+\begin{figure}
+\epsfysize=3in
+\centerline{\epsffile{Chapter07/waveb.eps}}
+\caption{\em Propagation of a 1-d square wave-pulse.
+Numerical  calculation performed using
+$c=1$, $\delta t = 5\times 10^{-3}$, and $N=100$.
+The dotted curve shows $E_x$ at $t=0.0$, and  the solid curve shows $E_x$ at $t=0.1$.}\label{fwave1db}
+\end{figure}
+
+\section{2-D Resonant Cavity}
+Figure~\ref{frescav} shows a 2-d resonant cavity consisting of a hollow, rectangular, perfectly
+conducting channel of dimensions $L_x\times L_y$. Suppose that the walls
+of the channel are aligned along the $x$- and $y$-axes.
+We shall excite this cavity in a rather artificial manner
+by imposing a $z$-directed alternating current pattern of frequency $f$,
+which has the same spatial structure as the mode in which we are interested. Let us calculate the electric
+and magnetic field patterns excited within the cavity by such a current pattern.
+
+\begin{figure}
+\epsfysize=3in
+\centerline{\epsffile{Chapter07/rescav.eps}}
+\caption{\em A 2-d resonant cavity.}\label{frescav}
+\end{figure}
+
+The electric and magnetic fields within the cavity can be written
+${\bf E} = [0,0,$\\ $E_z(x,y,t)]$, and ${\bf B} = [B_x(x,y,t), B_y(x,y,t), 0]$, respectively.
+It follows from Maxwell's equations that
+\begin{eqnarray}
+\frac{\partial H_x}{\partial t} + c\,\frac{\partial E_z}{\partial y} &=& 0,\label{rc1}\\[0.5ex]
+\frac{\partial H_y}{\partial t} + c\,\frac{\partial E_z}{\partial x} &=& 0,\\[0.5ex]
+\frac{\partial E_z}{\partial t} + c\,\frac{\partial H_y}{\partial x}
++ c\,\frac{\partial H_x}{\partial y}&=& J_z,\label{rc3}
+\end{eqnarray}
+where $c$ is the velocity of light, $H_x=c\,B_x$, $H_y=-c\,B_y$, and $J_z =-\mu_0\,c^2\,j_z$. Note that the
+above system of equations takes the form of three coupled advection equations with a source term.
+The boundary conditions are that the {\em tangential} electric field and the {\em normal}
+magnetic field must be zero at the conducting walls. It follows that
+\begin{equation}
+E_z=0\label{rcbc1}
+\end{equation}
+at all the walls (which are located at $x=0,L_x$ and $y=0,L_y$), 
+\begin{equation}
+H_x = \frac{\partial H_y}{\partial x} = 0
+\end{equation}
+at $x=0,L_x$, and
+\begin{equation}
+H_y = \frac{\partial H_x}{\partial y} = 0\label{rcbc2}
+\end{equation}
+at $y=0,L_y$. Finally, the normalized current pattern associated
+with the ($m$, $n$) mode takes the form
+\begin{equation}
+J_z(x,y,t) = J_0\,\sin(m\,\pi\,x/L_x)\,\sin(n\,\pi\,y/L_y)\,\sin(2\,\pi\,f\,t).
+\end{equation}
+
+As usual, we discretize in time on the uniform grid $t_n=t_0+n\,\delta t$, for $n=0,1,2,\cdots$.
+Furthermore, in the  $x$-direction, we discretize on the uniform grid $x_i = i\,\delta x$, for
+$i=0,I$, where $\delta x = L_x/I$.
+ Finally, in the  $y$-direction, we discretize on the uniform grid $y_j = j\,\delta y$, for
+$j=0,J$, where $\delta y = L_y/J$. Adopting a Crank-Nicholson  temporal differencing scheme
+similar to that discussed in Sects.~\ref{cnwave} and \ref{swave1d}, Eqs.~(\ref{rc1})--(\ref{rc3}) yield
+\begin{eqnarray}\label{xrc1}
+\frac{(H_x)_{i,j}^{n+1} -(H_x)_{i,j}^{n}}{\delta t} 
++\frac{c}{2}\left(\frac{\partial E_z}{\partial y}\right)^{n+1}_{i,j}
++\frac{c}{2}\left(\frac{\partial E_z}{\partial y}\right)^{n}_{i,j} &=& 0,\\[0.5ex]
+\frac{(H_y)_{i,j}^{n+1} -(H_y)_{i,j}^{n}}{\delta t} 
++\frac{c}{2}\left(\frac{\partial E_z}{\partial x}\right)^{n+1}_{i,j}
++\frac{c}{2}\left(\frac{\partial E_z}{\partial x}\right)^{n}_{i,j} &=& 0,\\[0.5ex]
+\frac{(E_z)_{i,j}^{n+1} -(E_z)_{i,j}^{n}}{\delta t} 
++\frac{c}{2}\left(\frac{\partial H_y}{\partial x}\right)^{n+1}_{i,j}
++\frac{c}{2}\left(\frac{\partial H_y}{\partial x}\right)^{n}_{i,j}&&\nonumber\\[0.5ex]
++\frac{c}{2}\left(\frac{\partial H_x}{\partial y}\right)^{n+1}_{i,j}
++\frac{c}{2}\left(\frac{\partial H_x}{\partial y}\right)^{n}_{i,j} &=& (J_z)_{i,j}^n,\label{xrc3}
+\end{eqnarray}
+where $(H_x)_{i,j}^n\equiv H_x(x_i, y_j, t_n)$, {\em etc.}
+
+Adopting a Fourier approach, we write
+\begin{eqnarray}
+(E_z)_{i,j}^n &=& \sum_{i'=0,I}^{j'=0,J}\hat{E}_{i',j'}^n\,\sin(i\,i'\,\pi/I)\,\sin(j\,j'\,\pi/J),\\[0.5ex]
+(H_x)_{i,j}^n &=& \sum_{i'=0,I}^{j'=0,J} \hat{X}_{i',j'}^n\,\sin(i\,i'\,\pi/I)\,\cos(j\,j'\,\pi/J),\\[0.5ex]
+(H_y)_{i,j}^n &=& \sum_{i'=0,I}^{j'=0,J} \hat{Y}_{i',j'}^n\,\cos(i\,i'\,\pi/I)\,\sin(j\,j'\,\pi/J),\\[0.5ex]
+(J_z)_{i,j}^n &=& \sum_{i'=0,I}^{j'=0,J} \hat{J}_{i',j'}^n\,\sin(i\,i'\,\pi/I)\,\sin(j\,j'\,\pi/J)
+\end{eqnarray}
+which automatically satisfies the boundary conditions (\ref{rcbc1})--(\ref{rcbc2}). 
+Equations~(\ref{xrc1})--(\ref{xrc3}) yield
+\begin{eqnarray}
+\hat{X}_{i,j}^{n+1}-\hat{X}_{i,j}^n + j\,D_y\,(\hat{E}_{i,j}^{n+1}+\hat{E}_{i,j}^{n})&=&0,\\[0.5ex]
+\hat{Y}_{i,j}^{n+1}-\hat{Y}_{i,j}^n + i\,D_x\,(\hat{E}_{i,j}^{n+1}+\hat{E}_{i,j}^{n})&=&0,\\[0.5ex]
+\hat{E}_{i,j}^{n+1}-\hat{E}_{i,j}^n - i\,D_x\,(\hat{Y}_{i,j}^{n+1}+\hat{Y}_{i,j}^{n})
+- j\,D_j\,(\hat{X}_{i,j}^{n+1}+\hat{X}_{i,j}^{n})&=&\delta t\,\hat{J}^{n}_{i,j},
+\end{eqnarray}
+for $i=0,I$ and $j=0,J$, where $D_x=\pi\,c\,\delta t/(2\,L_x)$ and  $D_y=\pi\,c\,\delta t/(2\,L_y)$.
+It follows that
+\begin{eqnarray}
+\hat{E}^{n+1}_{i,j} &=&  \frac{(1-i^2\,D_x^2-j^2\,D_y^2)\,\hat{E}_{i,j}^n + 2\,j\,D_y\,
+\hat{X}_{i,j}^n+ 2\,i\,D_x\,\hat{Y}_{i,j}^n
++\delta t \,\hat{J}^n_{i,j}}
+{1 + i^2\,D_x^2+j^2\,D_y^2}\nonumber\\[0.5ex]
+&&\label{xstepa}\\[0.5ex]
+\hat{X}_{i,j}^{n+1}& =& \hat{X}_{i,j}^n - j\,D_y\,(\hat{E}_{i,j}^{n+1}+\hat{E}_{i,j}^{n}),\\[0.5ex]
+\hat{Y}_{i,j}^{n+1}&=& \hat{Y}_{i,j}^n - i\,D_x\,(\hat{E}_{i,j}^{n+1}+\hat{E}_{i,j}^{n}).\label{xstepb}
+\end{eqnarray}
+
+The routine listed below solves the 2-d wave equation in a resonant
+cavity using the Crank-Nicholson scheme
+discussed above. The routine first Fourier transforms $H_x$, $H_y$, $E_z$, and
+$J_z$ in both the $x$- and $y$-directions, takes
+a time-step using Eqs.~(\ref{xstepa})--(\ref{xstepb}), and then reconstructs
+$H_x$, $H_y$, and $E_z$  via an double inverse Fourier transform.
+{\small\begin{verbatim}
+// Wave2D.cpp
+
+// Function to evolve 2-d wave equation:
+
+//  d H_x / dt + c d E_z / dy = 0
+
+//  d H_y / dt + c d E_z / dx = 0
+
+//  d E_z / dt + c d H_y / dx + c d H_x / dy = J_z
+
+// in region 0 < x < L_x and 0 < y < L_y
+
+// Boundary conditions:
+
+//  E_z(0, y) = E_z(L_x, y) = E_z(x, 0) = E_z(x, L_y) = 0
+
+//  H_x(0, y) = H_x(L_x, y) = d H_y(0, y) / dx =  d H_y(L_x, y) / dx = 0
+
+//  H_y(x, 0) = H_y(x, L_y) = d H_x(x, 0) / dy =  d H_x(x, L_y) / dy = 0
+
+// Matrices Hx, Hy, Ez, Jz assumed to be of extent I+1, J+1.
+// Now, (i,j)th elements of matrices correspond to
+
+//  x_i = i * dx    i=0,I
+
+//  y_j = j * dy    j=0,J
+
+// Here, dx = L_x / I is grid spacing in x-direction,
+
+// and dy = L_y / J is grid spacing in x-direction.
+
+// Now, Dx = pi c dt / (2 L_x) and Dy = pi c dt / (2 L_y),
+
+// where dt is time-step.
+
+// Uses Crank-Nicholson scheme.
+
+#include <blitz/array.h>
+
+using namespace blitz;
+
+void fft_forward_cos (Array<double,1> f, Array<double,1>& F);
+void fft_backward_cos (Array<double,1> F, Array<double,1>& f);
+void fft_forward_sin (Array<double,1> f, Array<double,1>& F);
+void fft_backward_sin (Array<double,1> F, Array<double,1>& f);
+
+void Wave2D (Array<double,2>& Hx, Array<double,2>& Hy, Array<double,2>& Ez,
+             Array<double,2> Jz, double Dx, double Dy, double dt)
+{
+  // Find I and J. Declare local arrays
+  int I = Hx.extent(0) - 1;
+  int J = Hx.extent(1) - 1;
+  Array<double,2> X(I+1, J+1), XX(I+1, J+1), XXX(I+1, J+1);
+  Array<double,2> Y(I+1, J+1), YY(I+1, J+1), YYY(I+1, J+1); 
+  Array<double,2> E(I+1, J+1), EE(I+1, J+1), EEE(I+1, J+1);
+  Array<double,2> K(I+1, J+1), KK(I+1, J+1);
+
+  // Fourier transform solution in x-direction
+  for (int j = 0; j <= J; j++)
+    {
+      Array<double,1> In(I+1), Out(I+1);
+
+      // Fourier transform Hx
+      for (int i = 0; i <= I; i++) In(i) = Hx(i, j);
+      fft_forward_sin (In, Out);
+      for (int i = 0; i <= I; i++) X(i, j) = Out(i);
+
+      // Fourier transform Hy
+      for (int i = 0; i <= I; i++) In(i) = Hy(i, j);
+      fft_forward_cos (In, Out);
+      for (int i = 0; i <= I; i++) Y(i, j) = Out(i);
+
+      // Fourier transform Ez
+      for (int i = 0; i <= I; i++) In(i) = Ez(i, j);
+      fft_forward_sin (In, Out);
+      for (int i = 0; i <= I; i++) E(i, j) = Out(i);
+
+      // Fourier transform Jz
+      for (int i = 0; i <= I; i++) In(i) = dt * Jz(i, j);
+      fft_forward_sin (In, Out);
+      for (int i = 0; i <= I; i++) K(i, j) = Out(i);
+    }
+
+  // Fourier transform solution in y-direction
+  for (int i = 0; i <= I; i++)
+    {
+      Array<double,1> In(J+1), Out(J+1);
+
+      // Fourier transform Hx
+      for (int j = 0; j <= J; j++) In(j) = X(i, j);
+      fft_forward_cos (In, Out);
+      for (int j = 0; j <= J; j++) XX(i, j) = Out(j);
+
+      // Fourier transform Hy
+      for (int j = 0; j <= J; j++) In(j) = Y(i, j);
+      fft_forward_sin (In, Out);
+      for (int j = 0; j <= J; j++) YY(i, j) = Out(j);
+
+      // Fourier transform Ez
+      for (int j = 0; j <= J; j++) In(j) = E(i, j);
+      fft_forward_sin (In, Out);
+      for (int j = 0; j <= J; j++) EE(i, j) = Out(j);
+
+      // Fourier transform Jz
+      for (int j = 0; j <= J; j++) In(j) = K(i, j);
+      fft_forward_sin (In, Out);
+      for (int j = 0; j <= J; j++) KK(i, j) = Out(j);
+    }
+  
+  // Evolve XX, YY, and EE
+  for (int i = 0; i <= I; i++)
+    for (int j = 0; j <= J; j++)
+      {
+        double x = double (i) * Dx;
+        double y = double (j) * Dy;
+        double fp = 1. + x*x + y*y;
+        double fm = 1. - x*x - y*y;
+
+        EEE(i, j) = fm * EE(i, j) + 2. * y * XX(i, j) +
+          2. * x * YY(i,j) + KK(i, j);
+        EEE(i, j) /= fp;
+        XXX(i, j) = XX(i, j) - y * (EEE(i, j) + EE(i, j));
+        YYY(i, j) = YY(i, j) - x * (EEE(i, j) + EE(i, j));  
+      }
+
+  // Reconstruct solution via inverse Fourier transform in y-direction
+  for (int i = 0; i <= I; i++)
+    {
+      Array<double,1> In(J+1), Out(J+1);
+
+      // Reconstruct Hx
+      for (int j = 0; j <= J; j++) In(j) = XXX(i, j);
+      fft_backward_cos (In, Out);
+      for (int j = 0; j <= J; j++) X(i, j) = Out(j);
+
+      // Reconstruct Hy
+      for (int j = 0; j <= J; j++) In(j) = YYY(i, j);
+      fft_backward_sin (In, Out);
+      for (int j = 0; j <= J; j++) Y(i, j) = Out(j);
+
+      // Reconstruct Ez
+      for (int j = 0; j <= J; j++) In(j) = EEE(i, j);
+      fft_backward_sin (In, Out);
+      for (int j = 0; j <= J; j++) E(i, j) = Out(j);
+    } 
+
+  // Reconstruct solution via inverse Fourier transform in x-direction
+  for (int j = 0; j <= J; j++)
+    {
+      Array<double,1> In(I+1), Out(I+1);
+
+      // Reconstruct Hx
+      for (int i = 0; i <= I; i++) In(i) = X(i, j);
+      fft_backward_sin (In, Out);
+      for (int i = 0; i <= I; i++) Hx(i, j) = Out(i);
+
+      // Reconstruct Hy
+      for (int i = 0; i <= I; i++) In(i) = Y(i, j);
+      fft_backward_cos (In, Out);
+      for (int i = 0; i <= I; i++) Hy(i, j) = Out(i);
+
+      // Reconstruct Ez
+      for (int i = 0; i <= I; i++) In(i) = E(i, j);
+      fft_backward_sin (In, Out);
+      for (int i = 0; i <= I; i++) Ez(i, j) = Out(i);
+    }
+}
+\end{verbatim}}
+
+The numerical calculations discussed below were performed
+using the above routine. The electromagnetic
+fields $H_x$, $H_y$, and $E_z$ were all initialized to zero everywhere  at $t=0$.
+ Figure~\ref{fcavity1} shows the maximum
+amplitude of $E_z$ versus the frequency, $f$, for an $m=1/n=1$ driving
+current distribution. It can
+be seen that there is a clear resonance at $f\simeq 0.7$. 
+
+\begin{figure}
+\epsfysize=3in
+\centerline{\epsffile{Chapter07/cavity1.eps}}
+\caption{\em Electromagnetic waves in a 2-d resonant cavity.
+The maximum amplitude of $E_z(x=0.5,y=0.5)$ between $t=0$ and $t=20$ versus the driving frequency, $f$.
+Numerical calculation performed using  $m=1$, $n=1$, $L_x=1$, $L_y=1$, $c=1$,
+$I=J=32$, and $\delta t = 10^{-2}$.}\label{fcavity1}
+\end{figure}
+
+Figures~\ref{fcavity2} and \ref{fcavity3} illustrate the typical time variation
+of $E_z$, $H_x$, and $H_y$ for a non-resonant and a resonant case, respectively.
+For the non-resonant case, the traces take the form of interference patterns
+between the directly driven response, which oscillates at the driving frequency $f$,
+and the transient response, which oscillates at the natural frequency $f_0$ of the cavity.
+Note that the transients never decay, since there is no dissipation in the present problem.
+Incidentally, it is easily demonstrated that
+\begin{equation}
+f_0 = \frac{c}{2}\sqrt{\frac{1}{(n\,L_x)^2}+\frac{1}{(m\,L_y)^2}}.
+\end{equation}
+Hence, it follows that $f_0=1/\sqrt{2} = 0.7071$ for $n=m=L_x=L_y=c=1$, which corresponds very well
+to the resonant frequency found in Fig.~\ref{fcavity1}.
+For the resonant case, the traces take the form of waves of ever increasing amplitude 
+which  oscillate at the
+natural frequency $f_0$.
+
+\begin{figure}
+\epsfysize=3in
+\centerline{\epsffile{Chapter07/cavity2.eps}}
+\caption{\em Electromagnetic waves in a 2-d resonant cavity.
+Time traces of $E_z(x=0.5,y=0.5)$ (solid curve), $H_x(x=0.5,y=0.0)$ (dashed curve), and
+$H_y(x=0.0,y=0.5)$ (dotted curve---obscured by dashed curve).
+Numerical calculation performed using $m=1$, $n=1$, $L_x=1$, $L_y=1$, $c=1$,
+$I=J=32$, $\delta t = 10^{-2}$, and $f=0.6$.}\label{fcavity2}
+\end{figure}
+
+\begin{figure}
+\epsfysize=3in
+\centerline{\epsffile{Chapter07/cavity3.eps}}
+\caption{\em Electromagnetic waves in a 2-d resonant cavity.
+Time traces of $E_z(x=0.5,y=0.5)$ (solid curve), $H_x(x=0.5,y=0.0)$ (dashed curve), and
+$H_y(x=0.0,y=0.5)$ (dotted curve---obscured by dashed curve).
+Numerical calculation performed using $m=1$, $n=1$, $L_x=1$, $L_y=1$, $c=1$,
+$I=J=32$, $\delta t = 10^{-2}$, and $f=0.7071$.}\label{fcavity3}
+\end{figure}
+
+Finally, Figs.~\ref{fcavity3} and \ref{fcavity4} illustrate the spatial
+variation of the electromagnetic fields driven within the cavity when
+$m=1$ and $n=1$. 
+
+\begin{figure}
+\epsfysize=3in
+\centerline{\epsffile{Chapter07/cavity4.eps}}
+\caption{\em Electromagnetic waves in a 2-d resonant cavity.
+Spatial variation of $E_z$ (solid curve) and
+$H_y$ (dashed curve) in the $x$-direction at $t=20$ and $y=0.5$.
+Numerical calculation performed using $m=1$, $n=1$, $L_x=1$, $L_y=1$, $c=1$,
+$I=J=32$, $\delta t = 10^{-2}$, and $f=0.7071$.}\label{fcavity4}
+\end{figure}
+
+\begin{figure}
+\epsfysize=3in
+\centerline{\epsffile{Chapter07/cavity5.eps}}
+\caption{\em Electromagnetic waves in a 2-d resonant cavity.
+Spatial variation of $E_z$ (solid curve) and
+$H_x$ (dashed curve) in the $y$-direction at $t=20$ and $x=0.5$.
+Numerical calculation performed using $m=1$, $n=1$, $L_x=1$, $L_y=1$, $c=1$,
+$I=J=32$, $\delta t = 10^{-2}$, and $f=0.7071$.}\label{fcavity5}
+\end{figure}

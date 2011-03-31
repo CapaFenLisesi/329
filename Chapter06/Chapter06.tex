@@ -1,0 +1,710 @@
+\chapter{Diffusion Equation}
+\section{Introduction}
+The diffusion equation
+\begin{equation}
+\frac{\partial T({\bf r},t)}{\partial t} = D\,\nabla^2 T({\bf r},t),
+\end{equation}
+where $D>0$ is the (uniform) coefficient of diffusion, describes many interesting physical
+phenomena. For instance, in heat conduction we can write
+\begin{equation}
+{\bf q} = - \kappa\,\nabla T,
+\end{equation}
+where ${\bf q}$ is the heat flux, $T$ the temperature, and $\kappa$ the coefficient
+of thermal conductivity. The above equation merely states that heat flows down a temperature
+gradient. In the absence of sinks or sources of heat, energy conservation
+requires that
+\begin{equation}
+-\frac{\partial Q}{\partial t} =  \int {\bf q}\cdot d{\bf S},
+\end{equation}
+where $Q$ is the thermal energy contained in  some volume $V$ bounded by a closed surface $S$.
+The above equation states that the rate of decrease of the thermal energy content of
+ volume $V$
+ equals  the instantaneous heat flux flowing across its boundary.
+However, $Q=\int c\,T\,dV$, where $c$ is the heat capacity per unit volume. Making
+use of the previous
+equations, as well as the divergence theorem, we obtain the following diffusion
+equation for the temperature:
+\begin{equation}
+\frac{\partial T}{\partial t} = D\,\nabla^2 T,
+\end{equation}
+where $D=\kappa/c$. In a typical heat conduction problem, we are given the
+temperature  $T({\bf r}, t_0)$ at some initial time $t_0$, and then asked
+to evaluate $T({\bf r},t)$ at all subsequent times. Such a problem is
+known as an {\em initial value problem}. The spatial boundary conditions can be either
+of type Dirichlet ({\em i.e.}, $T$ specified on the boundary), type
+Neumann ({\em i.e.}, $\nabla T$ specified on the boundary), or some combination.
+
+\section{1-D Problem with Mixed Boundary Conditions}
+Consider the solution of the diffusion equation in one dimension.
+Suppose that
+\begin{equation}\label{diff}
+\frac{\partial T(x,t)}{\partial t} = D\,\frac{\partial^2 T(x,t)}{\partial x^2},
+\end{equation}
+for $x_l\leq x\leq x_h$, subject to the mixed spatial boundary conditions
+\begin{equation}
+\alpha_l(t)\,T(x,t) + \beta_l(t)\,\frac{\partial T(x,t)}{\partial x} = \gamma_l(t),
+\end{equation}
+at $x=x_l$, and
+\begin{equation}
+\alpha_h(t) \,T(x,t)+ \beta_h(t)\,\frac{\partial  T(x,t)}{\partial x} = \gamma_h(t),
+\end{equation}
+at $x=x_h$. Here, $\alpha_l$, $\beta_l$, {\em etc.}, are known functions of time.
+Of course, $T(x,t_0)$ must be specified at some initial time $t_0$.
+
+Equation~(\ref{diff}) needs to be discretized in both time and space.
+In time, we  discretize
+on the equally spaced grid
+\begin{equation}
+t_n = t_0 + n\,\delta t,
+\end{equation}
+where $\delta t$ is the {\em time-step}. Adopting a
+simple first-order differencing scheme, Eq.~(\ref{diff}) becomes
+\begin{equation}\label{diff1}
+\frac{T(x,t_{n+1}) - T(x,t_n)}{\delta t} 
+= D \,\frac{\partial^2 T(x,t_n)}{\partial x^2}+ O(\delta t).
+\end{equation}
+ In space,
+we discretize on the usual equally spaced grid-points specified in Eq.~(\ref{e57}),
+and approximate $d^2/dx^2$ via the second-order, central difference scheme
+introduced in Eq.~(\ref{e58}). The spatial boundary conditions are discretized in a similar
+manner to Eqs.~(\ref{e529}) and (\ref{e530}). Thus, Eq.~(\ref{diff1}) yields
+\begin{equation}
+\frac{T_i^{n+1}-T_i^n}{\delta t} = D\,\frac{T_{i-1}^n-2\,T_i^n+T_{i+1}^n}{(\delta x)^2},
+\end{equation}
+or 
+\begin{equation}\label{diff2}
+T_i^{n+1} = T_i^n + C\,\left(T_{i-1}^n-2\,T_i^n+T_{i+1}^n\right)
+\end{equation}
+for $i=1,N$, where $T_i^n \equiv T(x_i,t_n)$, and $C= D\,\delta t/(\delta x)^2$. 
+The discretized boundary conditions take the form
+\begin{eqnarray}
+T_0^n &=& \frac{\gamma_l^n\,\delta x-\beta_l^n\,T_1^n}{\alpha_l^n\,\delta x -\beta_l^n},\\[0.5ex]
+T_{N+1}^n &=& \frac{\gamma_h^n\,\delta x + \beta_h^n\,T_N^n}{\alpha_h^n\,\delta x +\beta_h^n},\label{diff3}
+\end{eqnarray}
+where $\gamma_l^n\equiv \gamma_l(t_n)$, {\em etc.} The discretization scheme outlined above
+is termed first-order in time and second-order in space.
+
+Equations (\ref{diff2})--(\ref{diff3}) constitute a fairly straightforward iterative scheme which
+can be used to evolve the $T(x,t)$ in time.
+
+\section{An Example 1-D Diffusion Equation Solver}
+Listed below is an example 1-d diffusion equation solving routine which
+makes use of the {\tt Blitz++} library.
+{\small\begin{verbatim}
+// Diffusion1D.cpp
+
+// Function to evolve diffusion equation in 1-d:
+
+//  dT / dt = D d^2 T / dx^2  for  xl <= x <= xh
+
+//  alpha_l T + beta_l dT/dx = gamma_l  at x=xl
+
+//  alpha_h T + beta_h dT/dx = gamma_h  at x=xh
+
+// Array T assumed to be of extent N+2.
+
+// Now, ith element of array corresponds to
+
+//  x_i = xl + i * dx    i=0,N+1
+
+// Here, dx = (xh - xl) / (N+1) is grid spacing.
+
+// Function evolves T by single time-step.
+
+// C = D dt / dx^2, where dt is time-step.
+
+// Uses explicit scheme.
+
+#include <blitz/array.h>
+
+using namespace blitz;
+
+void Diffusion1D (Array<double,1>& T, 
+                  double alpha_l, double beta_l, double gamma_l,
+                  double alpha_h, double beta_h, double gamma_h,
+                  double dx, double C)
+{
+  // Set N. Declare local array.
+  int N = T.extent(0) - 2;
+  Array<double,1> T0(N+2);	
+
+  // Evolve T
+  T0 = T;	
+  for (int i = 1; i <= N; i++)
+    T(i) += C * (T0(i-1) - 2. * T0(i) + T0(i+1));
+
+  // Set boundary conditions
+  T(0) = (gamma_l * dx - beta_l * T(1)) / (alpha_l * dx - beta_l);
+  T(N+1) = (gamma_h * dx + beta_h * T(N)) / (alpha_h * dx + beta_h);
+}
+\end{verbatim}}
+
+\section{An Example 1-D Solution of the Diffusion Equation}\label{simple}
+Let us now solve the diffusion equation in 1-d using the finite difference
+technique discussed above. We seek the solution of Eq.~(\ref{diff})
+in the region $-x_0 \leq x \leq x_0$, subject to the initial
+condition
+\begin{equation}
+T(x,t_0) = \exp\!\left(\frac{-x^2}{4\,D\,t_0}\right),
+\end{equation}
+where $t_0>0$. The spatial boundary conditions are
+\begin{equation}
+ T(\pm x_0,t) = \sqrt{\frac{t_0}{t}}\, \exp\!\left(\frac{-x_0^2}{4\,D\,t}\right).
+\end{equation}
+ Of course, we can solve this problem
+analytically to give
+\begin{equation}
+T(x,t) =\sqrt{\frac{t_0}{t}}\, \exp\!\left(\frac{-x^2}{4\,D\,t}\right).
+\end{equation}
+Note that the above equation describes a Gaussian 
+ pulse which gradually decreases in height
+and broadens in width in such a manner that its area is conserved. The width of the pulse
+varies approximately as
+\begin{equation}
+{\mit\Delta}x \sim \sqrt{D\,t}.
+\end{equation}
+Moreover, the pulse approaches a $\delta$-function as $t\rightarrow 0$. 
+
+\begin{figure}
+\epsfysize=3in
+\centerline{\epsffile{Chapter06/diff1.eps}}
+\caption{\em Diffusive evolution of a 1-d Gaussian pulse.
+Numerical  calculation performed using
+$D=1$, $x_0=5$, $\delta t = 4\times 10^{-3}$, and $N=100$. The pulse is evolved from $t=0.1$ to $t=1$. The
+solid curve shows the initial condition at $t=0.1$, the dashed curve  the numerical solution
+at $t=1$, and the dotted curve (obscured by the dashed curve)  the analytic solution at $t=1$. }\label{fdiff1}
+\end{figure}
+
+Figure~\ref{fdiff1} shows a comparison between the analytic and numerical solutions for
+a calculation performed using $D=1$, $x_0=5$,  $t_0=0.1$, $\delta t = 4\times 10^{-3}$, and $N=100$.
+It can be seen that the  analytic and numerical solutions are in excellent agreement.
+
+\begin{figure}
+\epsfysize=4in
+\centerline{\epsffile{Chapter06/diff2.eps}}
+\caption{\em  Diffusive evolution of a 1-d Gaussian pulse.
+Numerical  calculation performed using
+$D=1$, $x_0=5$,  $\delta t = 4\times 10^{-3}$, and $N=125$. The simulation is started
+at $t=0.1$. The top-left, top-right, bottom-left, and bottom-right panels
+show the solution at $t=0.45$, $t=0.46$, $t=0.47$, and $t=0.48$, respectively.}\label{fdiff2}
+\end{figure}
+
+It is reasonable to expect that as $N$ increases at fixed $\delta t$
+({\em i.e.}, the spatial resolution increases at fixed temporal resolution) the numerical
+solution should become more and more accurate. This is indeed the case---at least, until $N$ 
+exceeds a critical value. Beyond this value, there is a
+catastrophic breakdown in the numerical solution. This breakdown is illustrated in Fig.~\ref{fdiff2}. 
+It can be seen that the
+solution develops rapidly growing short-wavelength oscillations. Indeed, the solution
+eventually becomes effectively infinite. Let us investigate this unusual
+and rather disturbing phenomenon.
+
+\section{von Neumann Stability Analysis}
+Clearly, our simple finite difference algorithm 
+for solving the 1-d diffusion equation is subject to a numerical instability under certain circumstances.
+Let us try to establish when this instability occurs. Consider the time evolution
+of a single Fourier mode of wave-number $k$: 
+\begin{equation}
+T(x,t) = \hat{T}(t)\,{\rm e}^{\,{\rm i}\,k\,x}.
+\end{equation}
+Substitution of the above expression into our finite difference scheme (\ref{diff2}) yields
+\begin{equation}
+\hat{T}^{n+1}\,{\rm e}^{\,{\rm i}\,k\,x_n} = \hat{T}^n\,{\rm e}^{\,{\rm i}\,k\,x_n}\,
+\left[1 + C\,({\rm e}^{-{\rm i}\,k\,\delta x}-2+ {\rm e}^{+{\rm i}\,k\,\delta x})\right],
+\end{equation}
+or
+\begin{equation}
+\hat{T}^{n+1} = A\,\hat{T}^n,
+\end{equation}
+where 
+\begin{equation}\label{stable}
+A = 1 - 2\,C\,(1-\cos k\,\delta x) = 1 - 4\,C\,\sin^2(k\,\delta x/2).
+\end{equation}
+Thus, the amplitude of the Fourier mode is amplified by a factor $A$ at each time-step.
+In order for the differencing scheme to be stable, the
+modulus of this amplification
+factor must be {\em less than unity}  for {\em all} possible values of $k$. Now, the largest
+possible value of $\sin^2(k\,\delta x/2)$ is unity: hence, the wave-length corresponding to
+this value is that of the most unstable Fourier mode. In fact, the most unstable mode
+possesses a wave-length which is {\em half} the grid-spacing: {\em i.e.},
+$\lambda = \delta x/2$. It follows from Eq.~(\ref{stable}) that this mode
+is stable provided 
+\begin{equation}
+C < \frac{1}{2}.
+\end{equation}
+Finally, from the definition of $C$, our stability condition can be written
+\begin{equation}\label{limit}
+\delta t < \frac{(\delta x)^2}{2\,D}.
+\end{equation}
+Note that $C=0.408$ for the stable calculation shown in Fig.~\ref{fdiff1}, whereas $C=0.635$
+for the unstable calculation shown in Fig.~\ref{fdiff2}.
+Incidentally, the type of stability analysis outlined above is called {\em von Neumann stability analysis}.
+Note that the neglect of the spatial boundary conditions in the above calculation is justified
+because the unstable modes vary on very small length-scales which are typically of order the grid spacing.
+
+According to Eq.~(\ref{limit}), our finite difference scheme for solving the 1-d diffusion
+equation is only stable provided that the time-step remains below some critical value.
+Note that this critical value scales like the {\em square} of the grid-spacing. This is
+a very unfavorable scaling, since it implies that a doubling of the spatial resolution
+requires a simultaneous reduction
+in the time-step  by a factor of four in order to maintain numerical stability. 
+Certainly, the above constraint limits us to absurdly small time-steps in high resolution
+calculations.
+Is there any way of overcoming this constraint?
+
+\section{The Crank-Nicholson Scheme}\label{cn}
+Let us revisit our temporal differencing scheme:
+\begin{equation}
+\frac{T(x,t_{n+1}) - T(x,t_n)}{\delta t} 
+= D \,\frac{\partial^2 T(x,t_n)}{\partial x^2}+ O(\delta t).
+\end{equation}
+Note that the right-hand side is evaluated entirely at the {\em start}
+of the time-step: {\em i.e.}, at $t_n$. This type of
+temporal differencing scheme is termed an {\em explicit} scheme. Now, explicit schemes are
+very straightforward to implement, but are also notoriously prone to numerical instabilities.
+Fortunately, we can often overcome these  instabilities by making our differencing
+scheme {\em implicit} in nature. An implicit scheme is one in which the right-hand
+side is evaluated partly (or wholly) at the {\em end} of the time-step: {\em i.e.}, at $t_{n+1}$.
+Unfortunately, implicit schemes are generally a great deal more complicated to implement
+than explicit schemes.
+
+The well-known Crank-Nicholson implicit method for solving the diffusion equation involves
+taking the 
+average of the right-hand side between the beginning and  end of  the time-step. In other words,
+\begin{equation}
+\frac{T(x,t_{n+1}) - T(x,t_n)}{\delta t} 
+= \frac{D}{2} \,\frac{\partial^2 T(x,t_n)}{\partial x^2}+
+\frac{D}{2} \,\frac{\partial^2 T(x,t_{n+1})}{\partial x^2}+ O(\delta t)^2.
+\end{equation}
+As indicated by the error term, this method is actually {\em second-order} in time.
+
+Adopting our usual spatial differencing scheme, the above expression yields
+\begin{equation}\label{crank}
+T_i^{n+1} - \frac{C}{2}\,\left(T_{i-1}^{n+1}-2\,T_i^{n+1}+T_{i+1}^{n+1}\right)=
+ T_i^n + \frac{C}{2}\,\left(T_{i-1}^n-2\,T_i^n+T_{i+1}^n\right).
+\end{equation}
+When we perform a von Neumann stability analysis of the above scheme, we obtain the
+following expression for the amplification factor:
+\begin{equation}
+A = \frac{1 - 2\,C\,\sin^2(k\,\delta x/2)}{1+2\,C\,\sin^2(k\,\delta x/2)}.
+\end{equation}
+Note that $|A|<1$ for all values of $k$. It follows that the Crank-Nicholson
+scheme is {\em unconditionally stable}. Unfortunately, Eq.~(\ref{crank}) constitutes
+a tridiagonal matrix equation linking the $T_i^{n+1}$ and the $T_i^n$. Thus, the
+price we pay for the high accuracy and unconditional stability of the Crank-Nicholson
+scheme is  having to invert a tridiagonal matrix equation at each time-step. Usually,
+this price is well worth paying.
+
+\section{An Improved 1-D Diffusion Equation Solver}
+Listed below is an improved 1-d diffusion equation solver which uses the Crank-Nicholson
+scheme, as well as the previous listed tridiagonal matrix solver and the {\tt Blitz++}
+library. Note the great structural similarity between this solver and the previously listed
+1-d Poisson solver (see Sect.~\ref{poisson1d}).
+{\small\begin{verbatim}
+// CrankNicholson1D.cpp
+
+// Function to evolve diffusion equation in 1-d:
+
+//  dT / dt = D d^2 T / dx^2  for  xl <= x <= xh
+
+//  alpha_l T + beta_l dT/dx = gamma_l  at x=xl
+
+//  alpha_h T + beta_h dT/dx = gamma_h  at x=xh
+
+// Array T assumed to be of extent N+2.
+
+// Now, ith element of array corresponds to
+
+//  x_i = xl + i * dx    i=0,N+1
+
+// Here, dx = (xh - xl) / (N+1) is grid spacing.
+
+// Function evolves T by single time-step.
+
+// C = D dt / dx^2, where dt is time-step.
+
+// Uses Crank-Nicholson implicit scheme.
+
+#include <blitz/array.h>
+
+using namespace blitz;
+
+void Tridiagonal (Array<double,1> a, Array<double,1> b, Array<double,1> c, 
+                  Array<double,1> w, Array<double,1>& u);
+
+void CrankNicholson1D (Array<double,1>& T, 
+                  double alpha_l, double beta_l, double gamma_l,
+                  double alpha_h, double beta_h, double gamma_h,
+                  double dx, double C)
+{
+  // Find N. Declare local arrays.
+  int N = T.extent(0) - 2;
+  Array<double,1> a(N+2), b(N+2), c(N+2), w(N+2);
+
+  // Initialize tridiagonal matrix
+  for (int i = 2; i <= N; i++) a(i) = - 0.5 * C;
+  for (int i = 1; i <= N; i++) b(i) = 1. + C;
+  b(1) += 0.5 * C * beta_l / (alpha_l * dx - beta_l);
+  b(N) -= 0.5 * C * beta_h / (alpha_h * dx + beta_h);
+  for (int i = 1; i <= N-1; i++) c(i) = - 0.5 * C;
+
+  // Initialize right-hand side vector
+  for (int i = 1; i <= N; i++)
+    w(i) = T(i) + 0.5 * C * (T(i-1) - 2. * T(i) + T(i+1));
+  w(1) += 0.5 * C * gamma_l * dx / (alpha_l * dx - beta_l);
+  w(N) += 0.5 * C * gamma_h * dx / (alpha_h * dx + beta_h);
+
+  // Invert tridiagonal matrix equation
+  Tridiagonal (a, b, c, w, T);
+
+  // Calculate i=0 and i=N+1 values
+  T(0) = (gamma_l * dx - beta_l * T(1)) /
+    (alpha_l * dx - beta_l);
+  T(N+1) = (gamma_h * dx + beta_h * T(N)) /
+    (alpha_h * dx + beta_h);
+}
+\end{verbatim}}
+
+\section{An Improved 1-D Solution of the Diffusion Equation}
+Let us now solve the simple diffusion problem introduced in Sect.~\ref{simple} with the above listed
+Crank-Nicholson routine. Figure~\ref{fdiff3} 
+shows a comparison between the analytic and numerical solutions for
+a calculation performed using $D=1$, $x_0=5$,  $t_0=0.1$, $\delta t = 0.1$, and $N=100$.
+It can be seen that the analytic and numerical solutions are in excellent agreement.
+Note, however, that the time-step  used in this calculation ({\em i.e.}, $\delta t = 0.1$) is much larger
+than that used in our previous calculation ({\em i.e.}, $\delta t = 4\times
+10^{-3}$), which employed an explicit differencing
+scheme---see Fig.~\ref{fdiff1}. According to Eq.~(\ref{limit}), an explicit
+ scheme is limited to time-steps less than about $5\times 10^{-3}$ for the problem under
+investigation.
+Thus, we have been able to exceed this limit by a factor of  20 with our
+implicit scheme, yet still maintain numerical stability. 
+Note that our Crank-Nicholson scheme is able to
+obtain accurate results with a time-step as large as $0.1$ because it is
+{\em second-order} in time. 
+
+\begin{figure}
+\epsfysize=3in
+\centerline{\epsffile{Chapter06/diff3.eps}}
+\caption{\em Diffusive evolution of a 1-d Gaussian  pulse.
+Numerical  calculation performed using
+$D=1$, $x_0=5$, $\delta t = 0.1$, and $N=100$. The pulse is evolved from $t=0.1$ to $t=1$. The
+solid curve shows the initial condition at $t=0.1$, the dashed curve  the numerical solution
+at $t=1$, and the dotted curve (obscured by the dashed curve)  the analytic solution at $t=1$. }\label{fdiff3}
+\end{figure}
+
+\section{2-D Problem with Dirichlet Boundary Conditions}
+Let us consider the solution of the diffusion equation in two dimensions. Suppose
+that
+\begin{equation}\label{diff2deq}
+\frac{\partial T(x,y,t)}{\partial t} = D\,\frac{\partial^2 T(x,y,t)}{\partial x^2}+D\,\frac{\partial^2 T(x,y,t)}
+{\partial y^2},
+\end{equation}
+for $x_l\leq x\leq x_h$, and $0\leq y\leq L$. Suppose that $T(x,y,t)$ satisfies mixed
+boundary conditions in the $x$-direction:
+\begin{equation}
+\alpha_l(t)\,T(x,y,t) + \beta_l(t)\,\frac{\partial T(x,y,t)}{\partial x} = \gamma_l(y,t),
+\end{equation}
+at $x=x_l$, and
+\begin{equation}
+\alpha_h(t) \,T(x,y,t)+ \beta_h(t)\,\frac{\partial T(x,y,t)}{\partial x} = \gamma_h(y,t),
+\end{equation}
+at $x=x_h$. Here, $\alpha_l$, $\beta_l$, {\em etc.}, are known functions of $t$,
+whereas $\gamma_l$, $\gamma_h$ are known functions of $y$ and $t$.
+ Furthermore, suppose that $T(x,y,t)$ satisfies the following simple Dirichlet boundary
+conditions in the $y$-direction:
+\begin{equation}
+T(x,0,t) = T(x,L,t) = 0.
+\end{equation}
+
+As before, we discretize in time on the uniform grid $t_n=t_0+n\,\delta t$, for $n=0,1,2,\cdots$.
+Furthermore, in the $x$-direction, we discretize on the uniform grid $x_i = x_l + i\,\delta x$, for
+$i=0,N+1$, where $\delta x = (x_h-x_l)/(N+1)$. Finally, in the $y$-direction, we discretize
+on the uniform grid $y_j = j\,\delta y$, for $j=0,J$, where $\delta y = L/J$. 
+Adopting the Crank-Nicholson temporal differencing scheme discussed in Sect.~\ref{cn}, and
+the second-order spatial differencing scheme outlined in
+Sect.~\ref{pois1d}, Eq.~(\ref{diff2deq}) yields
+\begin{eqnarray}\label{edisc}
+\frac{T_{i,j}^{n+1}-T_{i,j}^n}{\delta t} - \frac{D}{2}\,
+\frac{T_{i-1,j}^{n+1}-2\,T_{i,j}^{n+1}+T_{i+1,j}^{n+1}}{(\delta x)^2}
+- \frac{D}{2}\left(\frac{\partial^2 T}{\partial y^2}\right)_{i,j}^{n+1}=&&\nonumber\\[0.5ex]
+\frac{D}{2}\,
+\frac{T_{i-1,j}^{n}-2\,T_{i,j}^{n}+T_{i+1,j}^{n}}{(\delta x)^2} +
+\frac{D}{2}\left(\frac{\partial^2 T}{\partial y^2}\right)_{i,j}^{n},&&
+\end{eqnarray}
+where $T_{i,j}^n\equiv T(x_i,y_j,t_n)$. The discretized boundary conditions
+take the form
+\begin{eqnarray}\label{bcxdir}
+T_{0,j}^n &=& \frac{\gamma_{l\,j}^n\,\delta x-\beta_l^n\,T_{1,j}^n}{\alpha_l^n\,\delta x -\beta_l^n},\\[0.5ex]
+T_{N+1,j}^n &=& \frac{\gamma_{h\,j}^n\,\delta x + \beta_h^n\,T_{N,j}^n}{\alpha_h^n\,\delta x +\beta_h^n},
+\label{bcxdir1}
+\end{eqnarray}
+plus
+\begin{equation}\label{bcydir}
+T_{i,0}^n = T_{i,J}^n = 0.
+\end{equation}
+Here, $\alpha_l^n\equiv \alpha_l(t_n)$, {\em etc.}, and $\gamma_{l\,j}^n\equiv
+\gamma_l(y_j,t_n)$, {\em etc.}
+
+Adopting the Fourier  method introduced in Sect.~\ref{fftsine}, we
+write the $T_{i,j}^n$ in terms of their Fourier-sine harmonics:
+\begin{equation}\label{recon}
+T_{i,j}^n = \sum_{k=0}^{J} \hat{T}_{i,k}^n\,\sin(j\,k\,\pi/J),
+\end{equation}
+which automatically satisfies the boundary conditions (\ref{bcydir}).
+The above expression can be inverted to give (see Sect.~\ref{sfft})
+\begin{equation}\label{fftthat}
+\hat{T}_{i,j}^n = \frac{2}{J}\sum_{k=0}^{J} T_{i,k}^n\,\sin(j\,k\,\pi/J).
+\end{equation}
+When Eq.~(\ref{edisc}) is written in terms of the $\hat{T}_{i,j}^n$, it reduces to
+\begin{eqnarray}
+-\frac{C}{2}\,\hat{T}_{i-1,j}^{n+1} + \left\{1+C\,(1+j^2\,\kappa^2/2)\right\}\,
+\hat{T}_{i,j}^{n+1}-\frac{C}{2}\,\hat{T}_{i+1,j}^{n+1}
+=&&\nonumber\\[0.5ex] \frac{C}{2}\,\hat{T}_{i-1,j}^{n} + \left\{1-C\,(1+j^2\,\kappa^2/2)\right\}\,
+\hat{T}_{i,j}^{n}+\frac{C}{2}\,\hat{T}_{i+1,j}^{n},&&\label{tri1}
+\end{eqnarray}
+for $i=1,N$, and $j=0,J$. Here, $C= D\,\delta t/(\delta x)^2$, and $\kappa = \pi\,\delta x/L$.
+Moreover, the boundary conditions (\ref{bcxdir}) and  (\ref{bcxdir1}) yield
+\begin{eqnarray}
+\hat{T}_{0,j}^n &=& \frac{\Gamma_{l\,j}^n\,\delta x-\beta_l^n\,\hat{T}_{1,j}^n}{\alpha_l^n\,\delta x -\beta_l^n},\\[0.5ex]
+\hat{T}_{N+1,j}^n &=& \frac{\Gamma_{h\,j}^n\,\delta x + \beta_h^n\,\hat{T}_{N,j}^n}{\alpha_h^n\,\delta x +\beta_h^n},\label{tri3}
+\end{eqnarray}
+where
+\begin{equation}\label{fftbc}
+\hat{\Gamma}_{l\,j}^n = \frac{2}{J}\sum_{k=0}^{J} \gamma_{l,k}^n\,\sin(j\,k\,\pi/J),
+\end{equation}
+{\em etc.} Equations~(\ref{tri1})---(\ref{tri3}) constitute a set of $J+1$
+uncoupled tridiagonal matrix equations for the $\hat{T}_{i,j}^{n+1}$, with one
+equation for each separate value of $j$. 
+
+In order to advance our solution by one time-step, we first Fourier transform the
+$T_{i,j}^n$ and the boundary conditions, according to Eqs.~(\ref{fftthat}) and (\ref{fftbc}).
+Next, we invert the $J+1$ tridiagonal equations (\ref{tri1})---(\ref{tri3}) to
+ obtain the $\hat{T}_{i,j}^{n+1}$. Finally, we reconstruct the $T_{i,j}^n$ via
+Eq.~(\ref{recon}).
+
+\section{2-D Problem with Neumann Boundary Conditions}
+Let us replace the Dirichlet  boundary conditions (\ref{bcydir}) by the following
+simple Neumann boundary conditions:
+\begin{equation}
+\frac{\partial T(x,0,t)}{\partial y} = \frac{\partial T(x,L,t)}{\partial y} = 0.
+\end{equation}
+The  method of solution outlined in the previous section is unaffected, 
+except that the Fourier-sine transforms
+are replaced by Fourier-cosine transforms---see Sects.~\ref{fftcos} and \ref{sfft}.
+
+\section{An Example 2-D Diffusion Equation Solver}
+Listed below is an example 2-d diffusion equation solver which uses the Crank-Nicholson
+scheme, as well as the previous listed tridiagonal matrix solver and the {\tt Blitz++}
+library. Note the great structural similarity between this solver and the previously listed
+2-d Poisson solver (see Sect.~\ref{poisson2d}).
+{\small\begin{verbatim}
+// CrankNicholson2D.cpp
+
+// Function to evolve diffusion equation in 2-d:
+
+//  dT / dt = D d^2 T / dx^2 +  D d^2 T / dy^2  for  xl <= x <= xh  
+//                                              and  0 <= y <= L
+
+//  alphaL T + betaL dT/dx = gammaL(y)  at x=xl
+
+//  alphaH T + betaH dT/dx = gammaH(y)  at x=xh
+
+// In y-direction, either simple Dirichlet boundary conditions:
+
+//  T(x,0) = T(x,L) = 0
+
+// or simple Neumann boundary conditions:
+
+//  dT/dy(x,0) = dT/dy(x,L) = 0
+
+// Matrix T assumed to be of extent N+2, J+1.
+// Arrays gammaL, gammaH assumed to be of extent J+1.
+
+// Now, (i,j)th elements of matrices correspond to
+
+//  x_i = xl + i * dx    i=0,N+1
+
+//  y_j = j * L / J      j=0,J
+
+// Here, dx = (xh - xl) / (N+1) is grid spacing in x-direction.
+
+// Now, C =  D dt / dx^2, and kappa = pi * dx / L
+
+// Finally, Neumann=0/1 selects Dirichlet/Neumann bcs in y-direction.
+
+// Uses Crank-Nicholson scheme.
+
+#include <blitz/array.h>
+
+using namespace blitz;
+
+void fft_forward_cos (Array<double,1> f, Array<double,1>& F);
+void fft_backward_cos (Array<double,1> F, Array<double,1>& f);
+void fft_forward_sin (Array<double,1> f, Array<double,1>& F);
+void fft_backward_sin (Array<double,1> F, Array<double,1>& f);
+void Tridiagonal (Array<double,1> a, Array<double,1> b, Array<double,1> c, 
+                  Array<double,1> w, Array<double,1>& u);
+
+void CrankNicholson2D (Array<double,2>& T,
+                       double alphaL, double betaL, Array<double,1> gammaL, 
+                       double alphaH, double betaH, Array<double,1> gammaH,
+                       double dx, double C, double kappa, int Neumann)
+{
+  // Find N and J. Declare local arrays.
+  int N = T.extent(0) - 2;
+  int J = T.extent(1) - 1;
+  Array<double,2> TT(N+2, J+1), V(N+2, J+1);
+  Array<double,1> GammaL(J+1), GammaH(J+1);
+
+  // Fourier transform T  
+  for (int i = 0; i <= N+1; i++)
+    {
+      Array<double,1> In(J+1), Out(J+1);
+
+      for (int j = 0; j <= J; j++) In(j) = T(i, j);
+
+      if (Neumann)
+        fft_forward_cos (In, Out);
+      else
+        fft_forward_sin (In, Out);
+
+      for (int j = 0; j <= J; j++) TT(i, j) = Out(j);
+    }
+
+  // Fourier transform boundary conditions
+  if (Neumann)
+    {
+      fft_forward_cos (gammaL, GammaL);
+      fft_forward_cos (gammaH, GammaH);
+    }
+  else
+    {
+      fft_forward_sin (gammaL, GammaL);
+      fft_forward_sin (gammaH, GammaH);
+    }
+
+  // Construct source term
+  for (int i = 1; i <= N; i++)
+    for (int j = 0; j <= J; j++) 
+      V(i, j) = 
+        0.5 * C * TT(i-1, j) + 
+        (1. - C * (1. + 0.5 * double (j * j) * kappa * kappa)) * TT(i, j) +
+        0.5 * C * TT(i+1, j);
+     
+  // Solve tridiagonal matrix equations
+  if (Neumann)
+    {
+      for (int j = 0; j <= J; j++)
+       {  
+          Array<double,1> a(N+2), b(N+2), c(N+2), w(N+2), u(N+2);
+
+          // Initialize tridiagonal matrix
+          for (int i = 2; i <= N; i++) a(i) = - 0.5 * C;
+          for (int i = 1; i <= N; i++)
+           b(i) = 1. + C * (1. + 0.5 * double (j * j) * kappa * kappa);
+          b(1) += 0.5 * C * betaL / (alphaL * dx - betaL);
+          b(N) -= 0.5 * C * betaH / (alphaH * dx + betaH);
+          for (int i = 1; i <= N-1; i++) c(i) = - 0.5 * C;
+	  
+          // Initialize right-hand side vector
+          for (int i = 1; i <= N; i++)
+           w(i) = V(i, j);
+          w(1) += 0.5 * C * GammaL(j) * dx / (alphaL * dx - betaL);
+          w(N) += 0.5 * C * GammaH(j) * dx / (alphaH * dx + betaH);
+	  
+          // Invert tridiagonal matrix equation
+          Tridiagonal (a, b, c, w, u);
+          for (int i = 1; i <= N; i++) TT(i, j) = u(i);
+       }
+    }
+  else
+    {
+      for (int j = 1; j < J; j++)
+       { 
+          Array<double,1> a(N+2), b(N+2), c(N+2), w(N+2), u(N+2);
+
+          // Initialize tridiagonal matrix
+          for (int i = 2; i <= N; i++) a(i) = - 0.5 * C;
+          for (int i = 1; i <= N; i++)
+           b(i) = 1. + C * (1. + 0.5 * double (j * j) * kappa * kappa);
+          b(1) -= betaL / (alphaL * dx - betaL);
+          b(N) += betaH / (alphaH * dx + betaH);
+          for (int i = 1; i <= N-1; i++) c(i) = - 0.5 * C;
+	  
+          // Initialize right-hand side vector
+          for (int i = 1; i <= N; i++)
+           w(i) = V(i, j);
+          w(1) += 0.5 * C * GammaL(j) * dx / (alphaL * dx - betaL);
+          w(N) += 0.5 * C * GammaH(j) * dx / (alphaH * dx + betaH);
+	  
+          // Invert tridiagonal matrix equation
+          Tridiagonal (a, b, c, w, u);
+          for (int i = 1; i <= N; i++) TT(i, j) = u(i);
+       }
+      
+      for (int i = 1; i <= N  ; i++) 
+        {
+          TT(i, 0) = 0.; TT(i, J) = 0.;
+        }
+    }
+
+  // Reconstruct solution
+  for (int i = 1; i <= N; i++)
+    {
+      Array<double,1> In(J+1), Out(J+1);
+
+      for (int j = 0; j <= J; j++) In(j) = TT(i, j);
+
+      if (Neumann)
+        fft_backward_cos (In, Out);
+      else
+        fft_backward_sin (In, Out);
+
+      for (int j = 0; j <= J; j++) T(i, j) = Out(j);
+    }
+
+  // Calculate i=0 and i=N+1 values  
+  for (int j = 0; j <= J; j++)
+    {
+      T(0, j) = (gammaL(j) * dx - betaL * T(1, j)) /
+        (alphaL * dx - betaL);
+      T(N+1, j) = (gammaH(j) * dx + betaH * T(N, j)) /
+        (alphaH * dx + betaH);
+    }
+}
+\end{verbatim}}
+
+\section{An Example 2-D Solution of the Diffusion Equation}
+Let us now solve the diffusion equation in 2-d using the finite difference technique discussed above.
+We seek the solution of Eq.~(\ref{diff2deq}) in the region $0\leq x\leq 1$ and
+$0\leq y\leq 1$, subject to the following initial condition at $t=0$:
+\begin{eqnarray}
+T(x,y,0) &=& 1\mbox{\hspace{1cm}for~~$|x-0.5|<0.1$~~and~~$|y-0.5|<0.1$,}\nonumber\\[0.5ex]
+T(x,y,0) &=& 0\mbox{\hspace{1cm}otherwise.}
+\end{eqnarray}
+The boundary conditions are simply $T(0,y)=T(1,y)=T(x,0)=T(x,1)=0$. 
+
+\begin{figure}
+\epsfysize=5in
+\centerline{\epsffile{Chapter06/temp.eps}}
+\caption{\em Diffusion in two dimensions.
+Numerical  calculation performed using
+$D=1$, $\delta t = 10^{-4}$, and $N=J=128$. Density plots of $T(x,y,t)$ are shown at
+$t=0.000$ (top-left), $t=0.001$ (top-right), $t=0.002$ (middle-left), $t=0.003$
+(middle-right), $t=0.004$ (bottom-left), and $t=0.005$ (bottom-right). }
+\label{diff2d6}
+\end{figure}
+
+Figure~\ref{diff2d6} shows the evolution of $T(x,y,t)$ for a calculation performed
+with the previously listed 2-d diffusion equation solver 
+using $D=1$, $\delta t = 10^{-4}$, and $N=J=128$.
+
+\section{3-D Problems}
+The techniques discussed above for solving
+the diffusion equation in two dimensions with a restricted class of boundary conditions can easily
+be generalized to three dimensions. In the 3-d case, it is necessary to Fourier
+transform in {\em two} directions (the $y$ and $z$ directions, say) in order to reduce the
+problem to a system of uncoupled tridiagonal matrix equations. These equations can be inverted
+in the usual manner, and the solution can then be reconstructed via a double inverse Fourier
+transform.
